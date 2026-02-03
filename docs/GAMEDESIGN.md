@@ -168,7 +168,7 @@ Configuration Approach:
 
 Seed Generation:
 
-* Trainer ID â†’ Hash function â†’ Deterministic Bane/Boon indices
+* Trainer ID → Hash function → Deterministic Bane/Boon indices
 
 * Store active curse indices in save file for persistence
 

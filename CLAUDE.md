@@ -94,7 +94,7 @@ Generation-based behavior configs in `/include/config/battle.h` use `GEN_LATEST`
 
 ## Contributing Guidelines
 
-- **Branch targets**: Bug fixes → `master`, all other PRs → `upcoming`
+- **Branch targets**: Simple trunk based git workflow. Main branch is sacred.
 - New code should be minimally invasive; isolate large additions in their own files
 - Mark unused functions with `UNUSED`
 - Config philosophy:
