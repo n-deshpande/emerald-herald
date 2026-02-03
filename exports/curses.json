@@ -1,0 +1,38 @@
+{
+  "generated_at": "2026-02-11T07:41:32.924067+00:00",
+  "source_files": [
+    "include/constants/curses.h",
+    "src/data/curses.h"
+  ],
+  "curses": [
+    {
+      "id": 0,
+      "symbol": "CURSE_NONE",
+      "name": null,
+      "description": null,
+      "implemented": false,
+      "effects": []
+    },
+    {
+      "id": 1,
+      "symbol": "CURSE_BOON_BULWARK",
+      "name": "Bulwark",
+      "description": "Your party takes 20% less damage.",
+      "implemented": true,
+      "effects": [
+        {
+          "type": "CURSE_EFF_DAMAGE_TAKEN_MULT",
+          "stacking": "CURSE_STACK_MULTIPLY",
+          "selector": {
+            "side": "CURSE_SIDE_PLAYER",
+            "moveType": "TYPE_NONE",
+            "moveCategory": "CURSE_MOVE_CATEGORY_ANY",
+            "minHpPct": 0
+          },
+          "multiplier": 0.8,
+          "multiplier_raw": "CURSE_REDUCTION_PCT(20)"
+        }
+      ]
+    }
+  ]
+}
