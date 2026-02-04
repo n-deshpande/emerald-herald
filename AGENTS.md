@@ -1,14 +1,12 @@
-# CLAUDE.md
+# AGENTS.md
 
-This repo uses `AGENTS.md` as the primary, tool-agnostic guidance file.
+This file provides guidance to AI coding agents working in this repository. It mirrors the intent of `CLAUDE.md` but is tool-agnostic.
 
-## Use These First
+## Project Overview
 
-- `AGENTS.md` for build/test commands and repo conventions
-- `docs/GAMEDESIGN.md` for design intent
-- `docs/STYLEGUIDE.md` for code style
+This is a GBA ROM hack framework based on pret’s `pokeemerald` decompilation. It provides modern Pokemon mechanics (Gen 1–9 behavior, Mega Evolution, Dynamax, Z-moves, Terastallization) and is used to build custom ROM hacks.
 
-## Notes for AI Assistance
+## Build Commands
 
 ```bash
 make                           # Build ROM (pokeemerald.gba)
@@ -25,7 +23,7 @@ make check -j$(nproc)          # Parallel test run
 make check TESTS="Spikes"      # Run tests matching prefix
 make check TESTS="*effect*"    # Run tests with pattern (infix)
 make check TESTS="filename.c"  # Run tests from specific file
-make pokeemerald-test.elf TESTS="Spikes"  # Build test ROM for visual inspection in mgba
+make pokeemerald-test.elf TESTS="Spikes"  # Build test ROM for visual inspection in mGBA
 ```
 
 ### Test Structure
@@ -94,21 +92,19 @@ Generation-based behavior configs in `/include/config/battle.h` use `GEN_LATEST`
 #define B_CRIT_CHANCE GEN_LATEST  // Change to specific gen (e.g., GEN_3) to use that behavior
 ```
 
-## Curse System
-
-Custom system for persistent battle modifiers. Full docs in `docs/CURSES.md`.
-
-- **Strings in data tables**: Use `COMPOUND_STRING("text")` for pointer fields (`const u8 *`). Never use `_("text")` — it expands to a brace initializer that only works for array declarations.
-- **Script macros**: `goto_if_set` takes two args: `goto_if_set FLAG, LABEL`. Don't split into separate `checkflag` + `goto_if_set`.
-- **Adding curses**: Add ID in `include/constants/curses.h`, bump `CURSE_COUNT`, add effects array + def in `src/data/curses.h`. A static assert fires if counts mismatch.
-- **Testing curses**: Use `PARAMETRIZE` to run with/without the curse, `captureDamage` to record HP loss, `EXPECT_MUL_EQ` to assert the multiplier. Tests go in `test/battle/curse/`.
-
 ## Contributing Guidelines
 
-- **Branch targets**: Simple trunk based git workflow. Main branch is sacred.
-- New code should be minimally invasive; isolate large additions in their own files
-- Mark unused functions with `UNUSED`
+- Main branch is protected; use short-lived feature branches when needed.
+- New code should be minimally invasive; isolate large additions in their own files.
+- Mark unused functions with `UNUSED`.
 - Config philosophy:
-  - Save-modifying features: OFF by default, gated behind config
-  - Developer QoL or modern Pokemon emulation: ON by default
-  - All other configs: OFF by default
+  - Save-modifying features: OFF by default, gated behind config.
+  - Developer QoL or modern Pokemon emulation: ON by default.
+  - All other configs: OFF by default.
+
+## Working With Agents
+
+- Prefer small, focused changes; explain intent before broad refactors.
+- Avoid editing generated assets unless explicitly requested.
+- When modifying gameplay behavior, update or add tests when possible.
+- If a command is risky or slow (e.g., full rebuild), ask before running it.
