@@ -50,6 +50,7 @@ FortreeCity_Mart_Text_StockUpOnItems:
 	.string "Better to be safe than sorry!$"
 
 FortreeCity_Mart_Text_RareCandyMakesMonGrow:
-	.string "A RARE CANDY makes a POKéMON grow\n"
-	.string "immediately by one level.$"
-
+	.string "Ancient artifacts of power\n"
+	.string "lie hidden still.\p"
+	.string "Bestow one upon a POKéMON,\n"
+	.string "and its strength shall stir.$"

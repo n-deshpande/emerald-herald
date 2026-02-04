@@ -5242,7 +5242,7 @@ static void PrintStatsScreen_Moves_Top(u8 taskId)
         ConvertIntToDecimalStringN(gStringVar1, level, STR_CONV_MODE_LEFT_ALIGN, 3); //Move learn lvl
         PrintStatsScreenTextSmall(WIN_STATS_MOVES_TOP, sText_Stats_MoveLevel, moves_x + 113, moves_y + 3); //Level text
         PrintStatsScreenTextSmall(WIN_STATS_MOVES_TOP, gStringVar1, moves_x + 113, moves_y + 14); //Print level
-        item = ITEM_RARE_CANDY;
+        item = ITEM_GENGARITE;
     }
     else if (selected < (numEggMoves + numLevelUpMoves + numTMHMMoves))
     {
