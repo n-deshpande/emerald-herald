@@ -2039,13 +2039,13 @@ const struct Item gItemsInfo[] =
 
     [ITEM_INFINITE_RARE_CANDY] =
     {
-        .name = ITEM_NAME("InfiniteCandy"),
-        .pluralName = ITEM_PLURAL_NAME("InfiniteCandy"),
+        .name = ITEM_NAME("Divine Blessing"),
+        .pluralName = ITEM_PLURAL_NAME("Divine Blessings"),
         .price = 0,
         .description = COMPOUND_STRING(
-            "A Pokemon leveler\n"
-            "with unlimited\n"
-            "uses."),
+            "A solemn blessing\n"
+            "that grants a level\n"
+            "and is never spent."),
         .importance = 1,
         .notConsumed = TRUE,
         .pocket = POCKET_KEY_ITEMS,
