@@ -840,6 +840,7 @@ void UpdatePartyPokerusTime(u16 days);
 void PartySpreadPokerus(struct Pokemon *party);
 bool8 TryIncrementMonLevel(struct Pokemon *mon);
 u8 CanLearnTeachableMove(u16 species, u16 move);
+bool32 SpeciesCanLearnMoveAnyMethod(u16 species, u16 move);
 u32 GetRelearnerLevelUpMoves(struct Pokemon *mon, u16 *moves);
 u32 GetRelearnerEggMoves(struct Pokemon *mon, u16 *moves);
 u32 GetRelearnerTMMoves(struct Pokemon *mon, u16 *moves);

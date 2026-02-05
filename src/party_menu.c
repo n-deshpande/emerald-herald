@@ -2870,6 +2870,8 @@ static void SetPartyMonSelectionActions(struct Pokemon *mons, u8 slotId, u8 acti
 static void SetPartyMonFieldSelectionActions(struct Pokemon *mons, u8 slotId)
 {
     u8 i, j;
+    bool32 fieldMoveAdded[FIELD_MOVES_COUNT] = {0};
+    u16 species = GetMonData(&mons[slotId], MON_DATA_SPECIES);
 
     sPartyMenuInternal->numActions = 0;
     AppendToList(sPartyMenuInternal->actions, &sPartyMenuInternal->numActions, MENU_SUMMARY);
@@ -2880,16 +2882,32 @@ static void SetPartyMonFieldSelectionActions(struct Pokemon *mons, u8 slotId)
      || HasRelearnerTMMoves(&mons[slotId]) || HasRelearnerTutorMoves(&mons[slotId]))))
         AppendToList(sPartyMenuInternal->actions, &sPartyMenuInternal->numActions, MENU_SUB_MOVES);
 
-    // Add field moves to action list
+    // Add field moves to action list from known moves
     for (i = 0; i < MAX_MON_MOVES; i++)
+    {
+        u16 move = GetMonData(&mons[slotId], i + MON_DATA_MOVE1);
+        for (j = 0; j != FIELD_MOVES_COUNT; j++)
+        {
+            if (move == FieldMove_GetMoveId(j))
+            {
+                AppendToList(sPartyMenuInternal->actions, &sPartyMenuInternal->numActions, j + MENU_FIELD_MOVES);
+                fieldMoveAdded[j] = TRUE;
+                break;
+            }
+        }
+    }
+
+    // Add HM field moves by learnset eligibility, even if not currently known
+    if (species != SPECIES_NONE && !GetMonData(&mons[slotId], MON_DATA_IS_EGG))
     {
         for (j = 0; j != FIELD_MOVES_COUNT; j++)
         {
-            if (GetMonData(&mons[slotId], i + MON_DATA_MOVE1) == FieldMove_GetMoveId(j))
-            {
+            if (fieldMoveAdded[j])
+                continue;
+            if (j > FIELD_MOVE_WATERFALL)
+                continue;
+            if (SpeciesCanLearnMoveAnyMethod(species, FieldMove_GetMoveId(j)))
                 AppendToList(sPartyMenuInternal->actions, &sPartyMenuInternal->numActions, j + MENU_FIELD_MOVES);
-                break;
-            }
         }
     }
 

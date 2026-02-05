@@ -2291,27 +2291,15 @@ bool8 ScrCmd_checkfieldmove(struct ScriptContext *ctx)
 {
     enum FieldMove fieldMove = ScriptReadByte(ctx);
     bool32 doUnlockedCheck = ScriptReadByte(ctx);
-    u16 move;
 
     Script_RequestEffects(SCREFF_V1);
 
     gSpecialVar_Result = PARTY_SIZE;
     if (doUnlockedCheck && !IsFieldMoveUnlocked(fieldMove))
         return FALSE;
-
-    move = FieldMove_GetMoveId(fieldMove);
-    for (u32 i = 0; i < PARTY_SIZE; i++)
-    {
-        u16 species = GetMonData(&gPlayerParty[i], MON_DATA_SPECIES, NULL);
-        if (!species)
-            break;
-        if (!GetMonData(&gPlayerParty[i], MON_DATA_IS_EGG) && MonKnowsMove(&gPlayerParty[i], move) == TRUE)
-        {
-            gSpecialVar_Result = i;
-            gSpecialVar_0x8004 = species;
-            break;
-        }
-    }
+    gSpecialVar_Result = GetPartyMonForFieldMove(fieldMove, TRUE);
+    if (gSpecialVar_Result != PARTY_SIZE)
+        gSpecialVar_0x8004 = GetMonData(&gPlayerParty[gSpecialVar_Result], MON_DATA_SPECIES, NULL);
 
     return FALSE;
 }

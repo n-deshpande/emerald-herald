@@ -4,6 +4,7 @@
 #include "fldeff.h"
 #include "fldeff_misc.h"
 #include "party_menu.h"
+#include "pokemon.h"
 #include "constants/field_move.h"
 #include "constants/moves.h"
 #include "constants/party_menu.h"
@@ -224,3 +225,37 @@ const struct FieldMoveInfo gFieldMoveInfo[FIELD_MOVES_COUNT] =
     },
 #endif
 };
+
+u8 GetPartyMonForFieldMove(enum FieldMove fieldMove, bool8 preferKnowsMove)
+{
+    u16 move = FieldMove_GetMoveId(fieldMove);
+
+    if (move == MOVE_NONE)
+        return PARTY_SIZE;
+
+    if (preferKnowsMove)
+    {
+        for (u32 i = 0; i < PARTY_SIZE; i++)
+        {
+            if (GetMonData(&gPlayerParty[i], MON_DATA_SPECIES) == SPECIES_NONE)
+                break;
+            if (GetMonData(&gPlayerParty[i], MON_DATA_IS_EGG))
+                continue;
+            if (MonKnowsMove(&gPlayerParty[i], move))
+                return i;
+        }
+    }
+
+    for (u32 i = 0; i < PARTY_SIZE; i++)
+    {
+        u16 species = GetMonData(&gPlayerParty[i], MON_DATA_SPECIES);
+        if (species == SPECIES_NONE)
+            break;
+        if (GetMonData(&gPlayerParty[i], MON_DATA_IS_EGG))
+            continue;
+        if (SpeciesCanLearnMoveAnyMethod(species, move))
+            return i;
+    }
+
+    return PARTY_SIZE;
+}

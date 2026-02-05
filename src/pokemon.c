@@ -5654,6 +5654,52 @@ u8 CanLearnTeachableMove(u16 species, u16 move)
     }
 }
 
+bool32 SpeciesCanLearnMoveAnyMethod(u16 species, u16 move)
+{
+    if (move == MOVE_NONE)
+        return FALSE;
+
+    species = SanitizeSpeciesId(species);
+    if (species == SPECIES_EGG || species == SPECIES_NONE)
+        return FALSE;
+
+    // Check egg moves once at the base species; these apply line-wide.
+    u16 baseSpecies = species;
+    while (GetSpeciesPreEvolution(baseSpecies) != SPECIES_NONE)
+        baseSpecies = GetSpeciesPreEvolution(baseSpecies);
+
+    const u16 *eggMoves = GetSpeciesEggMoves(baseSpecies);
+    for (u32 i = 0; eggMoves[i] != MOVE_UNAVAILABLE; i++)
+    {
+        if (eggMoves[i] == move)
+            return TRUE;
+    }
+
+    // Check teachable and level-up learnsets across the evolution line.
+    for (u16 checkSpecies = species; checkSpecies != SPECIES_NONE; checkSpecies = GetSpeciesPreEvolution(checkSpecies))
+    {
+        if (CanLearnTeachableMove(checkSpecies, move))
+            return TRUE;
+
+        const struct LevelUpMove *learnset = GetSpeciesLevelUpLearnset(checkSpecies);
+        for (u32 i = 0; i < MAX_LEVEL_UP_MOVES && learnset[i].move != LEVEL_UP_MOVE_END; i++)
+        {
+            if (learnset[i].move == move)
+                return TRUE;
+        }
+
+#if P_TUTOR_MOVES_ARRAY
+        for (u32 i = 0; gTutorMoves[i] != MOVE_UNAVAILABLE; i++)
+        {
+            if (gTutorMoves[i] == move && CanLearnTeachableMove(checkSpecies, move))
+                return TRUE;
+        }
+#endif
+    }
+
+    return FALSE;
+}
+
 static void QuickSortMoves(u16 *moves, s32 left, s32 right)
 {
     if (left >= right)

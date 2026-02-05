@@ -34,4 +34,6 @@ static inline u32 FieldMove_GetPartyMsgID(enum FieldMove fieldMove)
     return gFieldMoveInfo[fieldMove].partyMsgID;
 }
 
+u8 GetPartyMonForFieldMove(enum FieldMove fieldMove, bool8 preferKnowsMove);
+
 #endif //GUARD_FIELD_MOVE_H

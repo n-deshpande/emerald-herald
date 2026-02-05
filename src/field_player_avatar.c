@@ -8,6 +8,7 @@
 #include "field_effect_helpers.h"
 #include "field_screen_effect.h"
 #include "field_player_avatar.h"
+#include "field_move.h"
 #include "fieldmap.h"
 #include "follower_npc.h"
 #include "menu.h"
@@ -1526,17 +1527,10 @@ u8 GetPlayerAvatarGenderByGraphicsId(u16 gfxId)
 
 bool8 PartyHasMonWithSurf(void)
 {
-    u8 i;
-
     if (!TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING))
     {
-        for (i = 0; i < PARTY_SIZE; i++)
-        {
-            if (GetMonData(&gPlayerParty[i], MON_DATA_SPECIES) == SPECIES_NONE)
-                break;
-            if (MonKnowsMove(&gPlayerParty[i], MOVE_SURF))
-                return TRUE;
-        }
+        if (GetPartyMonForFieldMove(FIELD_MOVE_SURF, TRUE) != PARTY_SIZE)
+            return TRUE;
     }
     return FALSE;
 }
