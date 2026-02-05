@@ -16,10 +16,19 @@ InsideOfTruck_OnResume:
 InsideOfTruck_EventScript_SetIntroFlags::
 	lockall
 	setflag FLAG_HIDE_MAP_NAME_POPUP
+	call InsideOfTruck_EventScript_InitCurses
 	checkplayergender
 	goto_if_eq VAR_RESULT, MALE, InsideOfTruck_EventScript_SetIntroFlagsMale
 	goto_if_eq VAR_RESULT, FEMALE, InsideOfTruck_EventScript_SetIntroFlagsFemale
 	end
+
+InsideOfTruck_EventScript_InitCurses:
+	checkflag FLAG_CURSES_INITIALIZED
+	goto_if_set InsideOfTruck_EventScript_InitCurses_End
+	special Special_InitCurses
+	msgbox InsideOfTruck_Text_CurseInit, MSGBOX_DEFAULT
+InsideOfTruck_EventScript_InitCurses_End:
+	return
 
 InsideOfTruck_EventScript_SetIntroFlagsMale::
 	setrespawn HEAL_LOCATION_LITTLEROOT_TOWN_BRENDANS_HOUSE_2F
@@ -56,3 +65,6 @@ InsideOfTruck_Text_BoxPrintedWithMonLogo:
 	.string "It's a POKéMON brand moving and\n"
 	.string "delivery service.$"
 
+InsideOfTruck_Text_CurseInit:
+	.string "A weight settles over you.\n"
+	.string "Your party feels sturdier.$"
