@@ -168,11 +168,7 @@ void Special_ShowDiploma(void)
 
 void Special_InitCurses(void)
 {
-    if (!FlagGet(FLAG_CURSES_INITIALIZED))
-    {
-        Curse_InitDefaults();
-        FlagSet(FLAG_CURSES_INITIALIZED);
-    }
+    Curse_InitDefaults();
 }
 
 void Special_ViewWallClock(void)

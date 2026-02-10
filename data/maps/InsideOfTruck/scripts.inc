@@ -23,9 +23,9 @@ InsideOfTruck_EventScript_SetIntroFlags::
 	end
 
 InsideOfTruck_EventScript_InitCurses:
-	checkflag FLAG_CURSES_INITIALIZED
-	goto_if_set InsideOfTruck_EventScript_InitCurses_End
+	goto_if_set FLAG_CURSES_INITIALIZED, InsideOfTruck_EventScript_InitCurses_End
 	special Special_InitCurses
+	setflag FLAG_CURSES_INITIALIZED
 	msgbox InsideOfTruck_Text_CurseInit, MSGBOX_DEFAULT
 InsideOfTruck_EventScript_InitCurses_End:
 	return

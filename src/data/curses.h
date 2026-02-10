@@ -23,7 +23,7 @@ static const struct CurseDef sCurseDefs[CURSE_COUNT] =
     [CURSE_NONE] = {0},
     [CURSE_BOON_BULWARK] =
     {
-        .name = _("Bulwark"),
+        .name = COMPOUND_STRING("Bulwark"),
         .description = COMPOUND_STRING("Your party takes 20% less damage."),
         .effects = sCurseEffects_Bulwark,
         .effectCount = ARRAY_COUNT(sCurseEffects_Bulwark),
