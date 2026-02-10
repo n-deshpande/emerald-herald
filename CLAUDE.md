@@ -92,6 +92,15 @@ Generation-based behavior configs in `/include/config/battle.h` use `GEN_LATEST`
 #define B_CRIT_CHANCE GEN_LATEST  // Change to specific gen (e.g., GEN_3) to use that behavior
 ```
 
+## Curse System
+
+Custom system for persistent battle modifiers. Full docs in `docs/CURSES.md`.
+
+- **Strings in data tables**: Use `COMPOUND_STRING("text")` for pointer fields (`const u8 *`). Never use `_("text")` — it expands to a brace initializer that only works for array declarations.
+- **Script macros**: `goto_if_set` takes two args: `goto_if_set FLAG, LABEL`. Don't split into separate `checkflag` + `goto_if_set`.
+- **Adding curses**: Add ID in `include/constants/curses.h`, bump `CURSE_COUNT`, add effects array + def in `src/data/curses.h`. A static assert fires if counts mismatch.
+- **Testing curses**: Use `PARAMETRIZE` to run with/without the curse, `captureDamage` to record HP loss, `EXPECT_MUL_EQ` to assert the multiplier. Tests go in `test/battle/curse/`.
+
 ## Contributing Guidelines
 
 - **Branch targets**: Simple trunk based git workflow. Main branch is sacred.
