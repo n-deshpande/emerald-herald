@@ -102,6 +102,7 @@ Custom system for persistent battle modifiers. Full docs in `docs/CURSES.md`.
 - **Script macros**: `goto_if_set` takes two args: `goto_if_set FLAG, LABEL`. Don't split into separate `checkflag` + `goto_if_set`.
 - **Adding curses**: Add ID in `include/constants/curses.h`, bump `CURSE_COUNT`, add effects array + def in `src/data/curses.h`. A static assert fires if counts mismatch.
 - **Testing curses**: Use `PARAMETRIZE` to run with/without the curse, `captureDamage` to record HP loss, `EXPECT_MUL_EQ` to assert the multiplier. Tests go in `test/battle/curse/`.
+- **Save size**: Changing `CursesSaveData` (adding slots/fields) changes `sizeof(SaveBlock2)`. Update `T_SAVEBLOCK2_SIZE` in `test/save.c` to match.
 
 ## Contributing Guidelines
 

@@ -142,7 +142,7 @@ def _normalize_selector(selector: dict) -> dict:
         "side": selector.get("side"),
         "moveType": selector.get("moveType"),
         "moveCategory": selector.get("moveCategory"),
-        "minHpPct": maybe_int(selector.get("minHpPct")) or selector.get("minHpPct"),
+        "minHpPct": v if (v := maybe_int(selector.get("minHpPct"))) is not None else selector.get("minHpPct"),
     }
 
 
