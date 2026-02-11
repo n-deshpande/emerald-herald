@@ -56,7 +56,7 @@ def split_top_level_braces(text: str) -> list[str]:
 
 
 def get_simple_field(block: str, field: str) -> str | None:
-    pattern = re.compile(r"\\." + re.escape(field) + r"\\s*=\\s*([^,}]+)")
+    pattern = re.compile(r"\." + re.escape(field) + r"\s*=\s*([^,}]+)")
     match = pattern.search(block)
     if not match:
         return None

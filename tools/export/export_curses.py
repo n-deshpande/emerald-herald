@@ -49,6 +49,7 @@ def parse_curse_constants(path: Path) -> tuple[dict[str, int], int | None]:
         name, value = match.group(1), int(match.group(2))
         if name == "CURSE_COUNT":
             curse_count = value
+            break
         else:
             curse_ids[name] = value
     return curse_ids, curse_count
@@ -119,6 +120,8 @@ def parse_curse_defs(path: Path) -> dict[str, CurseDef]:
     pattern = re.compile(r"\[(CURSE_[A-Z0-9_]+)\]\s*=\s*{", re.M)
     for match in pattern.finditer(text):
         symbol = match.group(1)
+        if symbol == "CURSE_COUNT":
+            continue
         _, _, block = extract_braced_block(text, match.end() - 1)
         name_raw = get_simple_field(block, "name")
         desc_raw = get_simple_field(block, "description")
@@ -310,8 +313,11 @@ def main() -> int:
         for err in errors:
             print(f"warning: {err}")
 
-    write_json(curses, Path(args.json_path))
-    write_md(curses, Path(args.md_path))
+    json_path = Path(args.json_path)
+    md_path = Path(args.md_path)
+    write_json(curses, json_path)
+    write_md(curses, md_path)
+    print(f"Exported {len(curses)} curses -> {json_path}, {md_path}")
     return 0
 
 
