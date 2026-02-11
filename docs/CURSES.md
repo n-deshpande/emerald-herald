@@ -239,3 +239,4 @@ make check TESTS="Pyroward" -j$(nproc)
 | Forgetting to bump `CURSE_COUNT` | Build will fail with `CurseDefsCountMismatch` static assert |
 | Using `goto_if_set LABEL` in scripts | `goto_if_set` takes two args: `goto_if_set FLAG, LABEL` |
 | Adding a new stacking rule | Must handle it in `ApplyCurseEffects` in `src/curse.c` |
+| Changing `CursesSaveData` (adding slots, new fields) | Update `T_SAVEBLOCK2_SIZE` in `test/save.c` to match the new `sizeof(struct SaveBlock2)` |

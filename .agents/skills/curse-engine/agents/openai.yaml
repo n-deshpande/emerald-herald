@@ -1,0 +1,4 @@
+interface:
+  display_name: "Curse Engine"
+  short_description: "Extend curse runtime and battle hooks"
+  default_prompt: "Use $curse-engine to add a new curse effect type and hook it into damage calc."
