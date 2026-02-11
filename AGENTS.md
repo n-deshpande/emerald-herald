@@ -1,10 +1,10 @@
 # AGENTS.md
 
-This file provides guidance to AI coding agents working in this repository. It mirrors the intent of `CLAUDE.md` but is tool-agnostic.
+This file gives Codex quick, high-signal context for working in this repo.
 
 ## Project Overview
 
-This is a GBA ROM hack framework based on pret’s `pokeemerald` decompilation. It provides modern Pokemon mechanics (Gen 1–9 behavior, Mega Evolution, Dynamax, Z-moves, Terastallization) and is used to build custom ROM hacks.
+`pokeemerald-expansion` is a GBA ROM-hack framework built on pret's `pokeemerald` decompilation. It provides modern Pokemon mechanics (Gen 1-9), plus QoL features for ROM-hack developers. It is not a standalone playable game; it is a base for building your own ROM hacks.
 
 ## Build Commands
 
@@ -23,19 +23,40 @@ make check -j$(nproc)          # Parallel test run
 make check TESTS="Spikes"      # Run tests matching prefix
 make check TESTS="*effect*"    # Run tests with pattern (infix)
 make check TESTS="filename.c"  # Run tests from specific file
-make pokeemerald-test.elf TESTS="Spikes"  # Build test ROM for visual inspection in mGBA
+make pokeemerald-test.elf TESTS="Spikes"  # Build test ROM for visual inspection in mgba
 ```
 
 ### Test Structure
 
 Tests use a DSL with three blocks:
-- **GIVEN**: Initialize battle state (parties, abilities, items)
-- **WHEN**: Define turns and actions
-- **SCENE**: Verify observable outputs (animations, HP changes, messages)
+- GIVEN: Initialize battle state (parties, abilities, items)
+- WHEN: Define turns and actions
+- SCENE: Verify observable outputs (animations, HP changes, messages)
 
 Test macros: `SINGLE_BATTLE_TEST`, `DOUBLE_BATTLE_TEST`, `AI_SINGLE_BATTLE_TEST`, `WILD_BATTLE_TEST`
 
-Tests automatically rig RNG so moves hit and effects activate unless specified otherwise.
+Tests auto-rig RNG so moves hit and effects activate unless specified otherwise.
+
+## Repository Layout (high level)
+
+- `src/` - C source files; major systems like `battle_*.c`, `field_*.c`, `pokemon_*.c`
+- `include/` - headers; `include/config/` for feature toggles and `include/constants/` for constants
+- `data/` - map layouts, encounters, compiled resources
+- `graphics/` - sprites and tilesets
+- `sound/` - audio assets (M4A, voicegroups, samples)
+- `asm/` - assembly sources
+- `test/` - battle and compression tests
+- `docs/` - extended documentation, style guide, and system-specific notes
+
+## Pokemon System Anatomy
+
+- Core data + APIs: `include/pokemon.h` defines `struct BoxPokemon`, `struct Pokemon`, `struct SpeciesInfo`, `struct Evolution`, `struct LevelUpMove`, `struct FormChange`, and `GetMonData/SetMonData` helpers; creation and evolution logic live in `src/pokemon.c`.
+- Species data: `src/data/pokemon/species_info.h` holds `gSpeciesInfo`; per-gen family tables are in `src/data/pokemon/species_info/gen_*_families.h`; shared dex text/anims in `src/data/pokemon/species_info/`.
+- Learnsets: level-up lists in `src/data/pokemon/level_up_learnsets/gen_*.h`; egg moves in `src/data/pokemon/egg_moves.h`; TM/tutor teachables in `src/data/pokemon/teachable_learnsets.h` (auto-generated via `tools/learnset_helpers/make_teachables.py` when enabled).
+- Forms: `src/data/pokemon/form_species_tables.h`, `src/data/pokemon/form_change_tables.h`, `src/data/pokemon/form_change_table_pointers.h`, plus `include/constants/form_change_types.h`.
+- Moves/abilities/items: IDs in `include/constants/moves.h`, `include/constants/abilities.h`, `include/constants/items.h`; move data in `src/data/moves_info.h`; move effects in `src/data/battle_move_effects.h`; ability data in `src/data/abilities.h`; item effects in `src/data/pokemon/item_effects.h` and item data in `src/data/items.h`.
+- Growth + storage: experience tables in `src/data/pokemon/experience_tables.h`; party globals in `include/pokemon.h`; storage UI in `src/pokemon_storage_system.c`; Pokedex screens in `src/pokedex*.c`.
+- Pokemon configs: `include/config/pokemon.h` for generation rules and breeding/learnset toggles; `include/config/species_enabled.h` to enable/disable families.
 
 ## Code Style
 
@@ -47,7 +68,7 @@ Tests automatically rig RNG so moves hit and effects activate unless specified o
 - Macros/Constants: `CAPS_WITH_UNDERSCORES`
 
 ### Formatting
-- C/H files: 4 spaces (not tabs)
+- C/H files: 4 spaces (no tabs)
 - Assembly/Script files (.s, .inc): tabs
 - Opening braces on next line for control structures
 - Switch cases align with switch block (no extra indent)
@@ -55,11 +76,12 @@ Tests automatically rig RNG so moves hit and effects activate unless specified o
 
 ### Data Types
 - Default to `u32`/`s32` for local variables
-- Use smallest type for: saveblock, EWRAM, and global variables
-- Use enums over magic numbers; use enum types in function signatures
+- Use the smallest type for: saveblock, EWRAM, and globals
+- Prefer enums over magic numbers; use enum types in signatures
 
 ### Config Checks
-Check configs inline within normal control flow, not with preprocessor guards in function bodies:
+Do config checks inline within normal control flow, not with preprocessor guards inside function bodies:
+
 ```c
 // Correct
 if (!B_VAR_DIFFICULTY)
@@ -71,40 +93,41 @@ if (!B_VAR_DIFFICULTY)
 #endif
 ```
 
-## Architecture
+## Key Config Conventions
 
-### Source Organization
-- `/src/` - C source files (~350 files)
-  - `battle_*.c` - Battle system (main, AI, animations, controllers, scripts)
-  - `field_*.c` - Overworld/field mechanics
-  - `pokemon_*.c` - Pokemon data and UI screens
-- `/include/` - Headers
-  - `/include/config/` - Feature toggles (battle.h, pokemon.h, ai.h, etc.)
-  - `/include/constants/` - Game constants
-- `/data/` - Map layouts, encounter data, compiled resources
-- `/graphics/` - Sprites and tilesets
-- `/sound/` - M4A audio (songs, voicegroups, sound samples)
-- `/test/` - Battle and compression tests
+Generation-based behavior configs in `include/config/battle.h` use the `GEN_LATEST` pattern:
 
-### Key Config Files
-Generation-based behavior configs in `/include/config/battle.h` use `GEN_LATEST` pattern:
 ```c
-#define B_CRIT_CHANCE GEN_LATEST  // Change to specific gen (e.g., GEN_3) to use that behavior
+#define B_CRIT_CHANCE GEN_LATEST  // Set to e.g., GEN_3 to lock behavior
 ```
 
-## Contributing Guidelines
+Config philosophy:
+- Save-modifying features: OFF by default, gated behind config
+- Developer QoL or modern Pokemon emulation: ON by default
+- All other configs: OFF by default
 
-- Main branch is protected; use short-lived feature branches when needed.
-- New code should be minimally invasive; isolate large additions in their own files.
+## Curse System (custom persistent battle modifiers)
+
+See `docs/CURSES.md` for full details.
+
+Important rules:
+- Strings in data tables: use `COMPOUND_STRING("text")` for pointer fields (`const u8 *`). Never use `_("text")` there.
+- Script macros: `goto_if_set` takes two args: `goto_if_set FLAG, LABEL` (do not split).
+- Adding curses: update `include/constants/curses.h`, bump `CURSE_COUNT`, add effects array + definition in `src/data/curses.h`. There is a static assert for count mismatch.
+- Testing curses: use `PARAMETRIZE`, `captureDamage`, `EXPECT_MUL_EQ` in `test/battle/curse/`.
+
+## Project Direction (docs/GAMEDESIGN.md)
+
+`docs/GAMEDESIGN.md` is a design bible for "Pokemon Emerald Herald: Bearer of the Curse". It describes the intended future path and priorities for this repo's romhack direction:
+
+- Vision: a vanilla-plus Emerald experience with Soulsborne-inspired difficulty, replayability, and competitive-grade battles.
+- Signature mechanic: procedural Banes/Boons (curates from a pool, seeded by Trainer ID), plus Legacy Dungeons that remove a chosen Bane.
+- Battle/encounter goals: competitive trainer teams (items/EVs/movesets), no mid-battle healing item spam, and early access to strong Pokemon.
+- QoL priorities: P0/P1/P2 feature lists (e.g., infinite TMs/rare candies, HM removal, early move relearner, EV items).
+- Roadmap phases: foundation (curse system), QoL/encounters, trainer teams + AI, legacy dungeons, polish/balance, then postgame.
+
+## Contribution Notes
+
+- Simple trunk-based workflow; main branch is sacred.
+- Keep new code minimally invasive; isolate large additions in their own files.
 - Mark unused functions with `UNUSED`.
-- Config philosophy:
-  - Save-modifying features: OFF by default, gated behind config.
-  - Developer QoL or modern Pokemon emulation: ON by default.
-  - All other configs: OFF by default.
-
-## Working With Agents
-
-- Prefer small, focused changes; explain intent before broad refactors.
-- Avoid editing generated assets unless explicitly requested.
-- When modifying gameplay behavior, update or add tests when possible.
-- If a command is risky or slow (e.g., full rebuild), ask before running it.
