@@ -166,6 +166,11 @@ void Special_ShowDiploma(void)
     LockPlayerFieldControls();
 }
 
+void Special_InitCurses(void)
+{
+    Curse_InitDefaults();
+}
+
 void Special_ViewWallClock(void)
 {
     gMain.savedCallback = CB2_ReturnToField;

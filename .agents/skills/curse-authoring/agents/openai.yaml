@@ -1,0 +1,4 @@
+interface:
+  display_name: "Curse Authoring"
+  short_description: "Add or update curse defs and tests"
+  default_prompt: "Use $curse-authoring to add a new curse and its tests."

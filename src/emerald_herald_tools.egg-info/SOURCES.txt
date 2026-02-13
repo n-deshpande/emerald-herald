@@ -1,0 +1,7 @@
+README.md
+pyproject.toml
+src/emerald_herald_tools.egg-info/PKG-INFO
+src/emerald_herald_tools.egg-info/SOURCES.txt
+src/emerald_herald_tools.egg-info/dependency_links.txt
+src/emerald_herald_tools.egg-info/requires.txt
+src/emerald_herald_tools.egg-info/top_level.txt

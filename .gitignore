@@ -35,6 +35,8 @@ build/
 porymap.*.cfg
 prefabs.json
 .vscode/
+.venv/
+exports/
 *.a
 .fuse_hidden*
 *.sna
