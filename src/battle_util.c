@@ -10984,6 +10984,18 @@ u32 GetTotalAccuracy(u32 battlerAtk, u32 battlerDef, u32 move, enum Ability atkA
         buff = MAX_STAT_STAGE;
 
     moveAcc = GetMoveAccuracy(move);
+
+    // Curse accuracy bonus (flat, applied to base accuracy, capped at 100)
+    {
+        s32 curseBonus = Curse_GetAccuracyBonus(battlerAtk, move);
+        if (curseBonus != 0)
+        {
+            moveAcc += curseBonus;
+            if (moveAcc > 100)
+                moveAcc = 100;
+        }
+    }
+
     // Check Thunder and Hurricane on sunny weather.
     if (IsBattlerWeatherAffected(battlerDef, B_WEATHER_SUN) && MoveHas50AccuracyInSun(move))
         moveAcc = 50;

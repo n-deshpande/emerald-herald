@@ -61,13 +61,14 @@ struct CurseEffect
 | Value | Meaning |
 |-------|---------|
 | `CURSE_EFF_DAMAGE_TAKEN_MULT` | Multiplies damage taken by the target |
+| `CURSE_EFF_ACCURACY_FLAT_BONUS` | Adds a flat bonus to move base accuracy (capped at 100) |
 
 **Stacking rules** (`CurseStacking`):
 
 | Value | Meaning |
 |-------|---------|
 | `CURSE_STACK_MULTIPLY` | Multiplies into the running modifier |
-| `CURSE_STACK_ADD_PCT` | Adds percentage points (not yet implemented in engine) |
+| `CURSE_STACK_ADD_PCT` | Adds to the running value (used by accuracy bonuses) |
 | `CURSE_STACK_MAX` | Takes the larger value (not yet implemented in engine) |
 | `CURSE_STACK_MIN` | Takes the smaller value (not yet implemented in engine) |
 | `CURSE_STACK_OVERRIDE` | Replaces the modifier entirely (not yet implemented in engine) |
@@ -79,10 +80,10 @@ Controls which battle situations the effect applies to.
 ```c
 struct CurseSelector
 {
-    u8 side;            // Who is being hit
+    u8 side;            // Which side the relevant battler must be on
     u8 moveType;        // Filter by move type (e.g. TYPE_FIRE), or TYPE_NONE for any
     u8 moveCategory;    // Filter by category (DAMAGE_CATEGORY_PHYSICAL, etc.), or CURSE_MOVE_CATEGORY_ANY
-    u8 minHpPct;        // Only applies if defender HP >= this % (0 = always)
+    u8 minHpPct;        // Only applies if relevant battler's HP >= this % (0 = always)
 };
 ```
 
@@ -90,9 +91,9 @@ struct CurseSelector
 
 | Value | Meaning |
 |-------|---------|
-| `CURSE_SIDE_PLAYER` | Only when the player's Pokemon is the target |
-| `CURSE_SIDE_OPPONENT` | Only when the opponent's Pokemon is the target |
-| `CURSE_SIDE_BOTH` | Applies regardless of which side is hit |
+| `CURSE_SIDE_PLAYER` | Only when the relevant battler is on the player's side |
+| `CURSE_SIDE_OPPONENT` | Only when the relevant battler is on the opponent's side |
+| `CURSE_SIDE_BOTH` | Applies regardless of side |
 
 ## How to Add a New Curse
 
@@ -137,6 +138,7 @@ static const struct CurseEffect sCurseEffects_Pyroward[] =
 |-------|-------|---------|
 | `CURSE_REDUCTION_PCT(pct)` | Take `pct`% less damage | `CURSE_REDUCTION_PCT(20)` = 0.8x |
 | `CURSE_MULT_PCT(pct)` | Multiply damage by `pct`% | `CURSE_MULT_PCT(150)` = 1.5x |
+| `CURSE_FLAT_ACCURACY(n)` | Flat accuracy bonus (raw integer) | `CURSE_FLAT_ACCURACY(5)` = +5 accuracy |
 
 ### Step 3: Add the CurseDef entry
 
@@ -238,5 +240,5 @@ make check TESTS="Pyroward" -j$(nproc)
 | Using `_("text")` for name/description fields | Use `COMPOUND_STRING("text")` — struct fields are pointers, not arrays |
 | Forgetting to bump `CURSE_COUNT` | Build will fail with `CurseDefsCountMismatch` static assert |
 | Using `goto_if_set LABEL` in scripts | `goto_if_set` takes two args: `goto_if_set FLAG, LABEL` |
-| Adding a new stacking rule | Must handle it in `ApplyCurseEffects` in `src/curse.c` |
+| Adding a new stacking rule | Must handle it in the relevant `Apply*Stacking` function in `src/curse.c` |
 | Changing `CursesSaveData` (adding slots, new fields) | Update `T_SAVEBLOCK2_SIZE` in `test/save.c` to match the new `sizeof(struct SaveBlock2)` |

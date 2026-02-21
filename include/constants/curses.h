@@ -4,12 +4,14 @@
 // Curse ids (update CURSE_COUNT when adding new ids)
 #define CURSE_NONE 0
 #define CURSE_BOON_BULWARK 1
-#define CURSE_COUNT 2
+#define CURSE_BOON_PRECISION 2
+#define CURSE_COUNT 3
 
 // Effect types
 enum CurseEffectType
 {
     CURSE_EFF_DAMAGE_TAKEN_MULT,
+    CURSE_EFF_ACCURACY_FLAT_BONUS,
 };
 
 // Stacking rules

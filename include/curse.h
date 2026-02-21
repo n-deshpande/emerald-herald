@@ -41,6 +41,7 @@ void Curse_InitDefaults(void);
 void Curse_ClearActive(void);
 void Curse_SetActiveBoon(u8 slot, u16 curseId);
 uq4_12_t Curse_GetDamageTakenModifier(const struct DamageContext *ctx);
+s32 Curse_GetAccuracyBonus(u32 battlerAtk, u32 move);
 u16 Curse_GetCount(void);
 const struct CurseDef *Curse_GetDef(u16 curseId);
 bool32 Curse_IsImplemented(u16 curseId);
