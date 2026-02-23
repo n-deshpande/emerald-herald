@@ -13,7 +13,7 @@ LittlerootTown_ProfessorBirchsLab_MapScripts::
 	@ 6: Chose Johto starter
 
 	@ State descriptions for VAR_BIRCH_LAB_STATE
-	@ 1: Never occurs
+	@ 1: Choosing first starter in lab
 	@ 2: Chose starter
 	@ 3: Received starter in lab
 	@ 4: Defeated rival on Route 103
@@ -49,6 +49,7 @@ LittlerootTown_ProfessorBirchsLab_EventScript_SetAfterJohtoStarterLayout::
 	end
 
 LittlerootTown_ProfessorBirchsLab_OnWarp:
+	map_script_2 VAR_BIRCH_LAB_STATE, 1, LittlerootTown_ProfessorBirchsLab_EventScript_SetObjectPosForStarterSelection
 	map_script_2 VAR_BIRCH_LAB_STATE, 2, LittlerootTown_ProfessorBirchsLab_EventScript_SetPlayerPosForReceiveStarter
 	map_script_2 VAR_DEX_UPGRADE_JOHTO_STARTER_STATE, 1, LittlerootTown_ProfessorBirchsLab_EventScript_SetObjectPosForDexUpgrade
 	map_script_2 VAR_DEX_UPGRADE_JOHTO_STARTER_STATE, 2, LittlerootTown_ProfessorBirchsLab_EventScript_SetObjectPosForDexUpgrade
@@ -60,6 +61,24 @@ LittlerootTown_ProfessorBirchsLab_OnWarp:
 
 LittlerootTown_ProfessorBirchsLab_EventScript_SetPlayerPosForReceiveStarter::
 	turnobject LOCALID_PLAYER, DIR_NORTH
+	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_SetObjectPosForStarterSelection::
+	turnobject LOCALID_PLAYER, DIR_NORTH
+	addobject LOCALID_BIRCHS_LAB_BIRCH
+	addobject LOCALID_BIRCHS_LAB_CYNDAQUIL_BALL
+	addobject LOCALID_BIRCHS_LAB_TOTODILE_BALL
+	addobject LOCALID_BIRCHS_LAB_CHIKORITA_BALL
+	turnobject LOCALID_BIRCHS_LAB_CYNDAQUIL_BALL, DIR_SOUTH
+	setobjectxy LOCALID_BIRCHS_LAB_CYNDAQUIL_BALL, 8, 4
+	turnobject LOCALID_BIRCHS_LAB_TOTODILE_BALL, DIR_SOUTH
+	setobjectxy LOCALID_BIRCHS_LAB_TOTODILE_BALL, 9, 4
+	turnobject LOCALID_BIRCHS_LAB_CHIKORITA_BALL, DIR_SOUTH
+	setobjectxy LOCALID_BIRCHS_LAB_CHIKORITA_BALL, 10, 4
+	turnobject LOCALID_BIRCHS_LAB_BIRCH, DIR_SOUTH
+	setobjectxy LOCALID_BIRCHS_LAB_BIRCH, 6, 4
+	turnobject LOCALID_BIRCHS_LAB_AIDE, DIR_EAST
+	setobjectxy LOCALID_BIRCHS_LAB_AIDE, 10, 10
 	end
 
 LittlerootTown_ProfessorBirchsLab_EventScript_SetObjectPosForDexUpgrade::
@@ -102,8 +121,8 @@ LittlerootTown_ProfessorBirchsLab_OnFrame:
 	map_script_2 VAR_DEX_UPGRADE_JOHTO_STARTER_STATE, 4, LittlerootTown_ProfessorBirchsLab_EventScript_ChooseJohtoStarter
 	.2byte 0
 
-@ The starter is technically given prior to this on Route 101 by special ChooseStarter
-@ This is just where the game tells you its yours and lets you nickname it
+@ The starter is selected before this event.
+@ This scene handles confirmation, nickname, and next objective guidance.
 LittlerootTown_ProfessorBirchsLab_EventScript_GiveStarterEvent::
 	lockall
 	bufferleadmonspeciesname STR_VAR_1
@@ -123,9 +142,17 @@ LittlerootTown_ProfessorBirchsLab_EventScript_NicknameStarter::
 	end
 
 LittlerootTown_ProfessorBirchsLab_EventScript_GoSeeRival::
+	goto_if_ge VAR_LITTLEROOT_RIVAL_STATE, 3, LittlerootTown_ProfessorBirchsLab_EventScript_HeadToRoute103
 	msgbox LittlerootTown_ProfessorBirchsLab_Text_MightBeGoodIdeaToGoSeeRival, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, YES, LittlerootTown_ProfessorBirchsLab_EventScript_AgreeToSeeRival
 	goto_if_eq VAR_RESULT, NO, LittlerootTown_ProfessorBirchsLab_EventScript_DeclineSeeingRival
+	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_HeadToRoute103::
+	msgbox LittlerootTown_ProfessorBirchsLab_Text_YouveMetRivalHeadToRoute103, MSGBOX_DEFAULT
+	clearflag FLAG_HIDE_ROUTE_101_BOY
+	setvar VAR_BIRCH_LAB_STATE, 3
+	releaseall
 	end
 
 LittlerootTown_ProfessorBirchsLab_EventScript_AgreeToSeeRival::
@@ -269,10 +296,16 @@ LittlerootTown_ProfessorBirchsLab_Movement_PlayerEnterLabForJohtoStarter:
 LittlerootTown_ProfessorBirchsLab_EventScript_Aide::
 	lock
 	faceplayer
+	goto_if_eq VAR_BIRCH_LAB_STATE, 1, LittlerootTown_ProfessorBirchsLab_EventScript_AideStarterChoice
 	goto_if_ge VAR_BIRCH_LAB_STATE, 3, LittlerootTown_ProfessorBirchsLab_EventScript_AideReceivedStarter
 	goto_if_set FLAG_BIRCH_AIDE_MET, LittlerootTown_ProfessorBirchsLab_EventScript_AideAlreadyMet
 	msgbox LittlerootTown_ProfessorBirchsLab_Text_BirchAwayOnFieldwork, MSGBOX_DEFAULT
 	setflag FLAG_BIRCH_AIDE_MET
+	release
+	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_AideStarterChoice::
+	msgbox LittlerootTown_ProfessorBirchsLab_Text_AideProfWaitingForChoice, MSGBOX_DEFAULT
 	release
 	end
 
@@ -287,6 +320,7 @@ LittlerootTown_ProfessorBirchsLab_EventScript_AideReceivedStarter::
 	end
 
 LittlerootTown_ProfessorBirchsLab_EventScript_Cyndaquil::
+	goto_if_eq VAR_BIRCH_LAB_STATE, 1, LittlerootTown_ProfessorBirchsLab_EventScript_ChooseTreecko
 	release
 	goto_if_ge VAR_DEX_UPGRADE_JOHTO_STARTER_STATE, 6, LittlerootTown_ProfessorBirchsLab_EventScript_AlreadyChoseJohtoStarter
 	applymovement LOCALID_BIRCHS_LAB_BIRCH, Common_Movement_WalkInPlaceFasterRight
@@ -298,6 +332,7 @@ LittlerootTown_ProfessorBirchsLab_EventScript_Cyndaquil::
 	end
 
 LittlerootTown_ProfessorBirchsLab_EventScript_Totodile::
+	goto_if_eq VAR_BIRCH_LAB_STATE, 1, LittlerootTown_ProfessorBirchsLab_EventScript_ChooseTorchic
 	release
 	goto_if_ge VAR_DEX_UPGRADE_JOHTO_STARTER_STATE, 6, LittlerootTown_ProfessorBirchsLab_EventScript_AlreadyChoseJohtoStarter
 	applymovement LOCALID_BIRCHS_LAB_BIRCH, Common_Movement_WalkInPlaceFasterRight
@@ -309,6 +344,7 @@ LittlerootTown_ProfessorBirchsLab_EventScript_Totodile::
 	end
 
 LittlerootTown_ProfessorBirchsLab_EventScript_Chikorita::
+	goto_if_eq VAR_BIRCH_LAB_STATE, 1, LittlerootTown_ProfessorBirchsLab_EventScript_ChooseMudkip
 	release
 	goto_if_ge VAR_DEX_UPGRADE_JOHTO_STARTER_STATE, 6, LittlerootTown_ProfessorBirchsLab_EventScript_AlreadyChoseJohtoStarter
 	applymovement LOCALID_BIRCHS_LAB_BIRCH, Common_Movement_WalkInPlaceFasterRight
@@ -318,6 +354,131 @@ LittlerootTown_ProfessorBirchsLab_EventScript_Chikorita::
 	goto_if_eq VAR_RESULT, NO, LittlerootTown_ProfessorBirchsLab_EventScript_TakeYourTime
 	goto LittlerootTown_ProfessorBirchsLab_EventScript_GiveChikorita
 	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_ChooseTreecko::
+	lockall
+	applymovement LOCALID_BIRCHS_LAB_BIRCH, Common_Movement_WalkInPlaceFasterRight
+	waitmovement 0
+	showmonpic SPECIES_TREECKO, 10, 3
+	msgbox LittlerootTown_ProfessorBirchsLab_Text_YoullTakeTreecko, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, LittlerootTown_ProfessorBirchsLab_EventScript_TakeYourTime
+	goto LittlerootTown_ProfessorBirchsLab_EventScript_GiveTreecko
+	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_ChooseTorchic::
+	lockall
+	applymovement LOCALID_BIRCHS_LAB_BIRCH, Common_Movement_WalkInPlaceFasterRight
+	waitmovement 0
+	showmonpic SPECIES_TORCHIC, 10, 3
+	msgbox LittlerootTown_ProfessorBirchsLab_Text_YoullTakeTorchic, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, LittlerootTown_ProfessorBirchsLab_EventScript_TakeYourTime
+	goto LittlerootTown_ProfessorBirchsLab_EventScript_GiveTorchic
+	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_ChooseMudkip::
+	lockall
+	applymovement LOCALID_BIRCHS_LAB_BIRCH, Common_Movement_WalkInPlaceFasterRight
+	waitmovement 0
+	showmonpic SPECIES_MUDKIP, 10, 3
+	msgbox LittlerootTown_ProfessorBirchsLab_Text_YoullTakeMudkip, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, LittlerootTown_ProfessorBirchsLab_EventScript_TakeYourTime
+	goto LittlerootTown_ProfessorBirchsLab_EventScript_GiveMudkip
+	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_GiveTreecko::
+	givemon SPECIES_TREECKO, 5
+	goto_if_eq VAR_RESULT, MON_GIVEN_TO_PARTY, LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedTreecko
+	goto_if_eq VAR_RESULT, MON_GIVEN_TO_PC, LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedTreeckoToPC
+	hidemonpic
+	goto Common_EventScript_NoMoreRoomForPokemon
+	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedTreecko::
+	hidemonpic
+	removeobject LOCALID_BIRCHS_LAB_CYNDAQUIL_BALL
+	setvar VAR_STARTER_MON, 0
+	goto LittlerootTown_ProfessorBirchsLab_EventScript_FinalizeStarterChoice
+	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedTreeckoToPC::
+	hidemonpic
+	call Common_EventScript_TransferredToPC
+	removeobject LOCALID_BIRCHS_LAB_CYNDAQUIL_BALL
+	setvar VAR_STARTER_MON, 0
+	goto LittlerootTown_ProfessorBirchsLab_EventScript_FinalizeStarterChoice
+	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_GiveTorchic::
+	givemon SPECIES_TORCHIC, 5
+	goto_if_eq VAR_RESULT, MON_GIVEN_TO_PARTY, LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedTorchic
+	goto_if_eq VAR_RESULT, MON_GIVEN_TO_PC, LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedTorchicToPC
+	hidemonpic
+	goto Common_EventScript_NoMoreRoomForPokemon
+	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedTorchic::
+	hidemonpic
+	removeobject LOCALID_BIRCHS_LAB_TOTODILE_BALL
+	setvar VAR_STARTER_MON, 1
+	goto LittlerootTown_ProfessorBirchsLab_EventScript_FinalizeStarterChoice
+	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedTorchicToPC::
+	hidemonpic
+	call Common_EventScript_TransferredToPC
+	removeobject LOCALID_BIRCHS_LAB_TOTODILE_BALL
+	setvar VAR_STARTER_MON, 1
+	goto LittlerootTown_ProfessorBirchsLab_EventScript_FinalizeStarterChoice
+	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_GiveMudkip::
+	givemon SPECIES_MUDKIP, 5
+	goto_if_eq VAR_RESULT, MON_GIVEN_TO_PARTY, LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedMudkip
+	goto_if_eq VAR_RESULT, MON_GIVEN_TO_PC, LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedMudkipToPC
+	hidemonpic
+	goto Common_EventScript_NoMoreRoomForPokemon
+	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedMudkip::
+	hidemonpic
+	removeobject LOCALID_BIRCHS_LAB_CHIKORITA_BALL
+	setvar VAR_STARTER_MON, 2
+	goto LittlerootTown_ProfessorBirchsLab_EventScript_FinalizeStarterChoice
+	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedMudkipToPC::
+	hidemonpic
+	call Common_EventScript_TransferredToPC
+	removeobject LOCALID_BIRCHS_LAB_CHIKORITA_BALL
+	setvar VAR_STARTER_MON, 2
+	goto LittlerootTown_ProfessorBirchsLab_EventScript_FinalizeStarterChoice
+	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_FinalizeStarterChoice::
+	removeobject LOCALID_BIRCHS_LAB_CYNDAQUIL_BALL
+	removeobject LOCALID_BIRCHS_LAB_TOTODILE_BALL
+	removeobject LOCALID_BIRCHS_LAB_CHIKORITA_BALL
+	setflag FLAG_SYS_POKEMON_GET
+	setflag FLAG_RESCUED_BIRCH
+	special HealPlayerParty
+	setflag FLAG_HIDE_ROUTE_101_BIRCH_ZIGZAGOON_BATTLE
+	setflag FLAG_HIDE_ROUTE_101_BIRCH_STARTERS_BAG
+	setflag FLAG_HIDE_ROUTE_101_ZIGZAGOON
+	setvar VAR_ROUTE101_STATE, 3
+	checkplayergender
+	call_if_eq VAR_RESULT, MALE, LittlerootTown_ProfessorBirchsLab_EventScript_HideMayInBedroom
+	call_if_eq VAR_RESULT, FEMALE, LittlerootTown_ProfessorBirchsLab_EventScript_HideBrendanInBedroom
+	setvar VAR_BIRCH_LAB_STATE, 2
+	releaseall
+	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_HideMayInBedroom::
+	setflag FLAG_HIDE_LITTLEROOT_TOWN_MAYS_HOUSE_RIVAL_BEDROOM
+	return
+
+LittlerootTown_ProfessorBirchsLab_EventScript_HideBrendanInBedroom::
+	setflag FLAG_HIDE_LITTLEROOT_TOWN_BRENDANS_HOUSE_RIVAL_BEDROOM
+	return
 
 LittlerootTown_ProfessorBirchsLab_EventScript_AlreadyChoseJohtoStarter::
 	msgbox LittlerootTown_ProfessorBirchsLab_Text_BetterLeaveOthersAlone, MSGBOX_DEFAULT
@@ -460,14 +621,33 @@ LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedJohtoStarter::
 	waitfanfare
 	return
 
+LittlerootTown_ProfessorBirchsLab_EventScript_BlockExitBeforeStarter::
+	lockall
+	msgbox LittlerootTown_ProfessorBirchsLab_Text_CantLeaveWithoutPartner, MSGBOX_DEFAULT
+	closemessage
+	applymovement LOCALID_PLAYER, LittlerootTown_ProfessorBirchsLab_Movement_PushPlayerFromExit
+	waitmovement 0
+	releaseall
+	end
+
+LittlerootTown_ProfessorBirchsLab_Movement_PushPlayerFromExit:
+	walk_up
+	step_end
+
 LittlerootTown_ProfessorBirchsLab_EventScript_Birch::
 	lock
 	faceplayer
+	goto_if_eq VAR_BIRCH_LAB_STATE, 1, LittlerootTown_ProfessorBirchsLab_EventScript_ChoosePartnerFromBalls
 	goto_if_eq VAR_DEX_UPGRADE_JOHTO_STARTER_STATE, 5, LittlerootTown_ProfessorBirchsLab_EventScript_CanHaveAnyOneOfRarePokemon
 	goto_if_eq VAR_DEX_UPGRADE_JOHTO_STARTER_STATE, 2, LittlerootTown_ProfessorBirchsLab_EventScript_GrassyPatchWaiting
 	goto_if_unset FLAG_HAS_MATCH_CALL, LittlerootTown_ProfessorBirchsLab_EventScript_TryRatePokedexOrRegister
 	goto_if_unset FLAG_ENABLE_PROF_BIRCH_MATCH_CALL, EventScript_RegisterProfBirch
 	goto LittlerootTown_ProfessorBirchsLab_EventScript_TryRatePokedexOrRegister
+	end
+
+LittlerootTown_ProfessorBirchsLab_EventScript_ChoosePartnerFromBalls::
+	msgbox LittlerootTown_ProfessorBirchsLab_Text_ChooseOneFromTable, MSGBOX_DEFAULT
+	release
 	end
 
 LittlerootTown_ProfessorBirchsLab_EventScript_CanHaveAnyOneOfRarePokemon::
@@ -681,19 +861,19 @@ LittlerootTown_ProfessorBirchsLab_Text_BirchEnjoysRivalsHelpToo:
 	.string "The PROF enjoys {RIVAL}'s help, too.\n"
 	.string "There's a lot of love there.$"
 
+LittlerootTown_ProfessorBirchsLab_Text_AideProfWaitingForChoice:
+	.string "The PROF has been waiting for you.\p"
+	.string "Choose one of the three POKéMON on\n"
+	.string "the table before you head out.$"
+
 LittlerootTown_ProfessorBirchsLab_Text_LikeYouToHavePokemon:
 	.string "PROF. BIRCH: So, {PLAYER}{KUN}.\p"
 	.string "I've heard so much about you from\n"
 	.string "your father.\p"
 	.string "I've heard that you don't have your\n"
 	.string "own POKéMON yet.\p"
-	.string "But the way you battled earlier,\n"
-	.string "you pulled it off with aplomb!\p"
-	.string "I guess you have your father's blood\n"
-	.string "in your veins after all!\p"
-	.string "Oh, yes. As thanks for rescuing me,\n"
-	.string "I'd like you to have the POKéMON you\l"
-	.string "used earlier.\p"
+	.string "No more waiting.\n"
+	.string "This partner is yours now.\p"
 	.string "{PLAYER} received the {STR_VAR_1}!$"
 
 LittlerootTown_ProfessorBirchsLab_Text_WhyNotGiveNicknameToMon:
@@ -715,9 +895,27 @@ LittlerootTown_ProfessorBirchsLab_Text_GetRivalToTeachYou:
 	.string "Get {RIVAL} to teach you what it\n"
 	.string "means to be a TRAINER.$"
 
+LittlerootTown_ProfessorBirchsLab_Text_YouveMetRivalHeadToRoute103:
+	.string "PROF. BIRCH: You've already met\n"
+	.string "{RIVAL}, then.\p"
+	.string "Take your new partner and head north.\n"
+	.string "{RIVAL} should be scouting ROUTE 103.$"
+
 LittlerootTown_ProfessorBirchsLab_Text_DontBeThatWay:
 	.string "PROF. BIRCH: Oh, don't be that way.\n"
 	.string "You should go meet my kid.$"
+
+LittlerootTown_ProfessorBirchsLab_Text_ChooseOneFromTable:
+	.string "PROF. BIRCH: On the table are three\n"
+	.string "partners.\p"
+	.string "Walk up and choose the one that calls\n"
+	.string "to you.$"
+
+LittlerootTown_ProfessorBirchsLab_Text_CantLeaveWithoutPartner:
+	.string "PROF. BIRCH: Not yet.\p"
+	.string "The road outside will swallow the\n"
+	.string "unprepared.\p"
+	.string "Choose one partner from the table.$"
 
 LittlerootTown_ProfessorBirchsLab_Text_BirchRivalGoneHome:
 	.string "PROF. BIRCH: {RIVAL}?\n"
@@ -896,6 +1094,24 @@ LittlerootTown_ProfessorBirchsLab_Text_CanHaveAnyOneOfRarePokemon:
 	.string "only found in another region!\p"
 	.string "You can have any one of these\n"
 	.string "three POKéMON!$"
+
+LittlerootTown_ProfessorBirchsLab_Text_YoullTakeTreecko:
+	.string "PROF. BIRCH: The WOOD GECKO POKéMON,\n"
+	.string "TREECKO.\p"
+	.string "Quick eyes. Quicker hands.\p"
+	.string "Is TREECKO your choice?$"
+
+LittlerootTown_ProfessorBirchsLab_Text_YoullTakeTorchic:
+	.string "PROF. BIRCH: The CHICK POKéMON,\n"
+	.string "TORCHIC.\p"
+	.string "A small flame, but a fierce heart.\p"
+	.string "Will you choose TORCHIC?$"
+
+LittlerootTown_ProfessorBirchsLab_Text_YoullTakeMudkip:
+	.string "PROF. BIRCH: The MUD FISH POKéMON,\n"
+	.string "MUDKIP.\p"
+	.string "Steady as stone, even in deep water.\p"
+	.string "Is MUDKIP the one?$"
 
 LittlerootTown_ProfessorBirchsLab_Text_YoullTakeCyndaquil:
 	.string "PROF. BIRCH: The FIRE POKéMON\n"
