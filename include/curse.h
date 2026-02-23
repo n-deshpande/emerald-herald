@@ -7,20 +7,30 @@
 
 struct DamageContext;
 
-struct CurseSelector
+struct CurseBattleDamageTakenParams
 {
     u8 side;
     u8 moveType;
     u8 moveCategory;
     u8 minHpPct;
+    u8 typeMatchup;
+    uq4_12_t multiplier;
+};
+
+struct CurseBattleAccuracyFlatParams
+{
+    u8 side;
+    u8 moveType;
+    u8 moveCategory;
+    u8 minHpPct;
+    s16 flatBonus;
 };
 
 struct CurseEffect
 {
     u8 type;
     u8 stacking;
-    struct CurseSelector selector;
-    uq4_12_t multiplier;
+    const void *params;
 };
 
 struct CurseDef
@@ -44,6 +54,7 @@ void Curse_SetActiveBane(u8 slot, u16 curseId);
 u16 Curse_GetActiveBoon(u8 slot);
 u16 Curse_GetActiveBane(u8 slot);
 uq4_12_t Curse_GetDamageTakenModifier(const struct DamageContext *ctx);
+s32 Curse_GetAccuracyBonus(u32 battlerAtk, u32 move);
 u16 Curse_GetCount(void);
 const struct CurseDef *Curse_GetDef(u16 curseId);
 bool32 Curse_IsImplemented(u16 curseId);

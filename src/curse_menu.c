@@ -38,12 +38,20 @@ enum
 };
 
 #define CURSE_MENU_MAX_ENTRIES ((CURSE_ACTIVE_BOON_SLOTS > CURSE_ACTIVE_BANE_SLOTS) ? CURSE_ACTIVE_BOON_SLOTS : CURSE_ACTIVE_BANE_SLOTS)
+#define CURSE_TAB_GAP 48
+#define CURSE_TAB_PILL_PAD_X 8
+#define CURSE_TAB_PILL_HEIGHT 14
+#define CURSE_TAB_MARKER_BLINK_FRAMES 16
+#define CURSE_LIST_ROW_HEIGHT 14
+#define CURSE_LIST_ROW_Y_START 2
+#define CURSE_TOP_STRIP_HEIGHT 10
 
 struct CurseMenuData
 {
     MainCallback callback;
     u8 tab;
     u8 cursor;
+    bool8 tabMarkerVisible;
     bool8 closing;
     u8 counts[CURSE_TAB_COUNT];
     u16 entries[CURSE_TAB_COUNT][CURSE_MENU_MAX_ENTRIES];
@@ -123,21 +131,24 @@ static const struct WindowTemplate sWindowTemplates[] =
     DUMMY_WIN_TEMPLATE,
 };
 
-static const u8 sText_Curses[] = _("CURSES");
-static const u8 sText_Boons[] = _("BOONS");
-static const u8 sText_Banes[] = _("BANES");
-static const u8 sText_NoActiveBoons[] = _("No active boons.");
-static const u8 sText_NoActiveBanes[] = _("No active banes.");
-static const u8 sText_DetailsUnavailable[] = _("No curse details available.");
+static const u8 sText_Curses[] = _("Curses");
+static const u8 sText_Boons[] = _("Boons");
+static const u8 sText_Banes[] = _("Banes");
+static const u8 sText_NoActiveBoons[] = _("No Active Boons.");
+static const u8 sText_NoActiveBanes[] = _("No Active Banes.");
+static const u8 sText_DetailsUnavailable[] = _("No Curse Details Available.");
 static const u8 sText_Level[] = _("Lv. {STR_VAR_1}");
-static const u8 sText_Footer[] = _("L/R: TAB   B: EXIT");
+static const u8 sText_Footer[] = _("L/R: Switch Tab   B: Exit");
 
-static const u8 sTextColors_Selected[] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_WHITE, TEXT_COLOR_DARK_GRAY};
-static const u8 sTextColors_Unselected[] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_LIGHT_GRAY, TEXT_COLOR_DARK_GRAY};
-static const u8 sTextColors_Boon[] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_GREEN, TEXT_COLOR_DARK_GRAY};
-static const u8 sTextColors_BoonDim[] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_LIGHT_GREEN, TEXT_COLOR_DARK_GRAY};
-static const u8 sTextColors_Bane[] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_RED, TEXT_COLOR_DARK_GRAY};
-static const u8 sTextColors_BaneDim[] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_LIGHT_RED, TEXT_COLOR_DARK_GRAY};
+static const u8 sTextColors_Primary[] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_DARK_GRAY, TEXT_COLOR_LIGHT_GRAY};
+static const u8 sTextColors_Secondary[] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_LIGHT_GRAY, TEXT_COLOR_WHITE};
+static const u8 sTextColors_BoonAccent[] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_GREEN, TEXT_COLOR_DARK_GRAY};
+static const u8 sTextColors_BaneAccent[] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_RED, TEXT_COLOR_DARK_GRAY};
+
+static bool8 IsTabMarkerVisible(void)
+{
+    return ((gMain.vblankCounter1 / CURSE_TAB_MARKER_BLINK_FRAMES) & 1) == 0;
+}
 
 static void VBlankCB_CurseMenu(void)
 {
@@ -184,20 +195,42 @@ static void DrawHeader(void)
 {
     s32 x;
 
-    FillWindowPixelBuffer(WIN_HEADER, PIXEL_FILL(0));
+    FillWindowPixelBuffer(WIN_HEADER, PIXEL_FILL(3));
+    FillWindowPixelRect(WIN_HEADER, PIXEL_FILL(1), 0, 0, WindowWidthPx(WIN_HEADER), 1);
+    FillWindowPixelRect(WIN_HEADER, PIXEL_FILL(1), 0, 15, WindowWidthPx(WIN_HEADER), 1);
     x = GetStringCenterAlignXOffset(FONT_NORMAL, sText_Curses, 30 * 8);
-    AddTextPrinterParameterized3(WIN_HEADER, FONT_NORMAL, x, 1, sTextColors_Selected, TEXT_SKIP_DRAW, sText_Curses);
+    AddTextPrinterParameterized3(WIN_HEADER, FONT_NORMAL, x, 1, sTextColors_Primary, TEXT_SKIP_DRAW, sText_Curses);
     CopyWindowToVram(WIN_HEADER, COPYWIN_FULL);
 }
 
 static void DrawTabs(void)
 {
-    const u8 *boonColors = (sCurseMenu->tab == CURSE_TAB_BOONS) ? sTextColors_Boon : sTextColors_BoonDim;
-    const u8 *baneColors = (sCurseMenu->tab == CURSE_TAB_BANES) ? sTextColors_Bane : sTextColors_BaneDim;
+    u16 boonWidth = GetStringWidth(FONT_NORMAL, sText_Boons, 0);
+    u16 baneWidth = GetStringWidth(FONT_NORMAL, sText_Banes, 0);
+    u16 totalWidth = boonWidth + CURSE_TAB_GAP + baneWidth;
+    s32 boonX = (WindowWidthPx(WIN_TABS) - totalWidth) / 2;
+    s32 baneX = boonX + boonWidth + CURSE_TAB_GAP;
+    s16 markerX = (sCurseMenu->tab == CURSE_TAB_BOONS) ? boonX - 8 : baneX - 8;
+    s16 markerY = 1;
 
-    FillWindowPixelBuffer(WIN_TABS, PIXEL_FILL(0));
-    AddTextPrinterParameterized3(WIN_TABS, FONT_NORMAL, 36, 1, boonColors, TEXT_SKIP_DRAW, sText_Boons);
-    AddTextPrinterParameterized3(WIN_TABS, FONT_NORMAL, 132, 1, baneColors, TEXT_SKIP_DRAW, sText_Banes);
+    FillWindowPixelBuffer(WIN_TABS, PIXEL_FILL(3));
+    FillWindowPixelRect(WIN_TABS, PIXEL_FILL(1), 0, 15, WindowWidthPx(WIN_TABS), 1);
+
+    if (sCurseMenu->tab == CURSE_TAB_BOONS)
+        FillWindowPixelRect(WIN_TABS, PIXEL_FILL(7), boonX - CURSE_TAB_PILL_PAD_X, 1, boonWidth + CURSE_TAB_PILL_PAD_X * 2, CURSE_TAB_PILL_HEIGHT);
+    else
+        FillWindowPixelRect(WIN_TABS, PIXEL_FILL(5), baneX - CURSE_TAB_PILL_PAD_X, 1, baneWidth + CURSE_TAB_PILL_PAD_X * 2, CURSE_TAB_PILL_HEIGHT);
+
+    AddTextPrinterParameterized3(WIN_TABS, FONT_NORMAL, boonX, 1, sTextColors_Primary, TEXT_SKIP_DRAW, sText_Boons);
+    AddTextPrinterParameterized3(WIN_TABS, FONT_NORMAL, baneX, 1, sTextColors_Primary, TEXT_SKIP_DRAW, sText_Banes);
+
+    if (sCurseMenu->tabMarkerVisible)
+    {
+        const u8 *markerColor = (sCurseMenu->tab == CURSE_TAB_BOONS) ? sTextColors_BoonAccent : sTextColors_BaneAccent;
+
+        AddTextPrinterParameterized3(WIN_TABS, FONT_SMALL, markerX, markerY, markerColor, TEXT_SKIP_DRAW, gText_SelectorArrow);
+    }
+
     CopyWindowToVram(WIN_TABS, COPYWIN_FULL);
 }
 
@@ -206,13 +239,15 @@ static void DrawList(void)
     u8 count = GetCurrentCount();
     u8 i;
 
-    FillWindowPixelBuffer(WIN_LIST, PIXEL_FILL(1));
+    FillWindowPixelBuffer(WIN_LIST, PIXEL_FILL(3));
+    FillWindowPixelRect(WIN_LIST, PIXEL_FILL(1), 0, 0, WindowWidthPx(WIN_LIST), CURSE_TOP_STRIP_HEIGHT);
+    FillWindowPixelRect(WIN_LIST, PIXEL_FILL(2), WindowWidthPx(WIN_LIST) - 1, 0, 1, sWindowTemplates[WIN_LIST].height * 8);
 
     if (count == 0)
     {
         const u8 *text = (sCurseMenu->tab == CURSE_TAB_BOONS) ? sText_NoActiveBoons : sText_NoActiveBanes;
 
-        AddTextPrinterParameterized3(WIN_LIST, FONT_SMALL, 4, 2, sTextColors_Unselected, TEXT_SKIP_DRAW, text);
+        AddTextPrinterParameterized3(WIN_LIST, FONT_SMALL, 4, 14, sTextColors_Secondary, TEXT_SKIP_DRAW, text);
         CopyWindowToVram(WIN_LIST, COPYWIN_FULL);
         return;
     }
@@ -220,11 +255,17 @@ static void DrawList(void)
     for (i = 0; i < count; i++)
     {
         const struct CurseDef *def = Curse_GetDef(sCurseMenu->entries[sCurseMenu->tab][i]);
-        const u8 *colors = (i == sCurseMenu->cursor) ? sTextColors_Selected : sTextColors_Unselected;
-        u8 y = i * 14 + 2;
+        const u8 *colors = (i == sCurseMenu->cursor) ? sTextColors_Primary : sTextColors_Secondary;
+        u8 y = i * CURSE_LIST_ROW_HEIGHT + CURSE_LIST_ROW_Y_START;
 
         if (i == sCurseMenu->cursor)
-            AddTextPrinterParameterized3(WIN_LIST, FONT_NORMAL, 2, y, sTextColors_Selected, TEXT_SKIP_DRAW, gText_SelectorArrow);
+        {
+            u8 fill = (sCurseMenu->tab == CURSE_TAB_BOONS) ? PIXEL_FILL(7) : PIXEL_FILL(5);
+            const u8 *markerColor = (sCurseMenu->tab == CURSE_TAB_BOONS) ? sTextColors_BoonAccent : sTextColors_BaneAccent;
+
+            FillWindowPixelRect(WIN_LIST, fill, 0, y - 1, WindowWidthPx(WIN_LIST) - 1, 11);
+            AddTextPrinterParameterized3(WIN_LIST, FONT_NORMAL, 2, y, markerColor, TEXT_SKIP_DRAW, gText_SelectorArrow);
+        }
 
         if (def != NULL)
             AddTextPrinterParameterized3(WIN_LIST, FONT_SMALL, 14, y, colors, TEXT_SKIP_DRAW, def->name);
@@ -237,11 +278,12 @@ static void DrawDetails(void)
 {
     u8 count = GetCurrentCount();
 
-    FillWindowPixelBuffer(WIN_DETAIL, PIXEL_FILL(1));
+    FillWindowPixelBuffer(WIN_DETAIL, PIXEL_FILL(3));
+    FillWindowPixelRect(WIN_DETAIL, PIXEL_FILL(1), 0, 0, WindowWidthPx(WIN_DETAIL), CURSE_TOP_STRIP_HEIGHT);
 
     if (count == 0)
     {
-        AddTextPrinterParameterized3(WIN_DETAIL, FONT_SMALL, 4, 2, sTextColors_Unselected, TEXT_SKIP_DRAW, sText_DetailsUnavailable);
+        AddTextPrinterParameterized3(WIN_DETAIL, FONT_SMALL, 4, 14, sTextColors_Secondary, TEXT_SKIP_DRAW, sText_DetailsUnavailable);
         CopyWindowToVram(WIN_DETAIL, COPYWIN_FULL);
         return;
     }
@@ -254,9 +296,13 @@ static void DrawDetails(void)
             ConvertIntToDecimalStringN(gStringVar1, 1, STR_CONV_MODE_LEFT_ALIGN, 1);
             StringExpandPlaceholders(gStringVar4, sText_Level);
 
-            AddTextPrinterParameterized3(WIN_DETAIL, FONT_NORMAL, 4, 2, sTextColors_Selected, TEXT_SKIP_DRAW, def->name);
-            AddTextPrinterParameterized3(WIN_DETAIL, FONT_SMALL, 4, 18, sTextColors_Unselected, TEXT_SKIP_DRAW, gStringVar4);
-            AddTextPrinterParameterized3(WIN_DETAIL, FONT_SMALL, 4, 34, sTextColors_Selected, TEXT_SKIP_DRAW, def->description);
+            if (sCurseMenu->tab == CURSE_TAB_BOONS)
+                AddTextPrinterParameterized3(WIN_DETAIL, FONT_NORMAL, 4, 2, sTextColors_BoonAccent, TEXT_SKIP_DRAW, def->name);
+            else
+                AddTextPrinterParameterized3(WIN_DETAIL, FONT_NORMAL, 4, 2, sTextColors_BaneAccent, TEXT_SKIP_DRAW, def->name);
+
+            AddTextPrinterParameterized3(WIN_DETAIL, FONT_SMALL, 4, 18, sTextColors_Secondary, TEXT_SKIP_DRAW, gStringVar4);
+            AddTextPrinterParameterized3(WIN_DETAIL, FONT_SMALL, 4, 34, sTextColors_Primary, TEXT_SKIP_DRAW, def->description);
         }
     }
 
@@ -265,8 +311,12 @@ static void DrawDetails(void)
 
 static void DrawFooter(void)
 {
-    FillWindowPixelBuffer(WIN_FOOTER, PIXEL_FILL(1));
-    AddTextPrinterParameterized3(WIN_FOOTER, FONT_SMALL, 4, 4, sTextColors_Unselected, TEXT_SKIP_DRAW, sText_Footer);
+    s32 x;
+
+    FillWindowPixelBuffer(WIN_FOOTER, PIXEL_FILL(3));
+    FillWindowPixelRect(WIN_FOOTER, PIXEL_FILL(1), 0, 0, WindowWidthPx(WIN_FOOTER), 1);
+    x = GetStringCenterAlignXOffset(FONT_SMALL, sText_Footer, WindowWidthPx(WIN_FOOTER));
+    AddTextPrinterParameterized3(WIN_FOOTER, FONT_SMALL, x, 6, sTextColors_Primary, TEXT_SKIP_DRAW, sText_Footer);
     CopyWindowToVram(WIN_FOOTER, COPYWIN_FULL);
 }
 
@@ -362,6 +412,11 @@ static void CB2_CurseMenu(void)
     else if (!gPaletteFade.active)
     {
         HandleInput();
+        if (sCurseMenu->tabMarkerVisible != IsTabMarkerVisible())
+        {
+            sCurseMenu->tabMarkerVisible = IsTabMarkerVisible();
+            DrawTabs();
+        }
     }
 
     RunTasks();
@@ -428,6 +483,7 @@ static void CB2_InitCurseMenu(void)
         BuildEntries();
         sCurseMenu->tab = CURSE_TAB_BOONS;
         sCurseMenu->cursor = 0;
+        sCurseMenu->tabMarkerVisible = IsTabMarkerVisible();
         DrawAll();
         gMain.state++;
         break;
@@ -451,6 +507,7 @@ void ShowCurseMenu(void (*callback)(void))
     sCurseMenu->callback = callback;
     sCurseMenu->tab = CURSE_TAB_BOONS;
     sCurseMenu->cursor = 0;
+    sCurseMenu->tabMarkerVisible = IsTabMarkerVisible();
     sCurseMenu->closing = FALSE;
     gMain.state = 0;
     SetMainCallback2(CB2_InitCurseMenu);

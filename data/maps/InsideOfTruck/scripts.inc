@@ -67,4 +67,4 @@ InsideOfTruck_Text_BoxPrintedWithMonLogo:
 
 InsideOfTruck_Text_CurseInit:
 	.string "A weight settles over you.\n"
-	.string "Your party feels sturdier.$"
+	.string "Your party feels sturdier and sharper.$"

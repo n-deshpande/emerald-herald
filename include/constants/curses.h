@@ -4,12 +4,15 @@
 // Curse ids (update CURSE_COUNT when adding new ids)
 #define CURSE_NONE 0
 #define CURSE_BOON_BULWARK 1
-#define CURSE_COUNT 2
+#define CURSE_BOON_PRECISION 2
+#define CURSE_BANE_EXPOSED 3
+#define CURSE_COUNT 4
 
 // Effect types
 enum CurseEffectType
 {
     CURSE_EFF_DAMAGE_TAKEN_MULT,
+    CURSE_EFF_ACCURACY_FLAT_BONUS,
 };
 
 // Stacking rules
@@ -28,6 +31,14 @@ enum CurseSide
     CURSE_SIDE_PLAYER,
     CURSE_SIDE_OPPONENT,
     CURSE_SIDE_BOTH,
+};
+
+enum CurseTypeMatchup
+{
+    CURSE_TYPE_MATCHUP_ANY,
+    CURSE_TYPE_MATCHUP_SUPER_EFFECTIVE_ONLY,
+    CURSE_TYPE_MATCHUP_NOT_VERY_EFFECTIVE_ONLY,
+    CURSE_TYPE_MATCHUP_NEUTRAL_ONLY,
 };
 
 #define CURSE_MOVE_CATEGORY_ANY 0xFF
