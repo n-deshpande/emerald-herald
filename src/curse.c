@@ -15,19 +15,16 @@ STATIC_ASSERT(ARRAY_COUNT(sCurseDefs) == CURSE_COUNT, CurseDefsCountMismatch);
 // 6 active slots * 3 effects per curse = 18 max; round up for safety.
 #define MAX_CURSE_MATCHED_EFFECTS 18
 
-static bool32 CurseSelectorMatches(const struct CurseSelector *selector, u32 battler, u32 move, u8 moveType)
+static bool32 SideMatches(u8 sideRule, u32 battler)
 {
-    enum BattleSide side = GetBattlerSide(battler);
-    enum DamageCategory category = GetMoveCategory(move);
-
-    switch (selector->side)
+    switch (sideRule)
     {
     case CURSE_SIDE_PLAYER:
-        if (side != B_SIDE_PLAYER)
+        if (GetBattlerSide(battler) != B_SIDE_PLAYER)
             return FALSE;
         break;
     case CURSE_SIDE_OPPONENT:
-        if (side != B_SIDE_OPPONENT)
+        if (GetBattlerSide(battler) != B_SIDE_OPPONENT)
             return FALSE;
         break;
     case CURSE_SIDE_BOTH:
@@ -36,28 +33,84 @@ static bool32 CurseSelectorMatches(const struct CurseSelector *selector, u32 bat
         return FALSE;
     }
 
-    if (selector->moveType != TYPE_NONE && selector->moveType != moveType)
+    return TRUE;
+}
+
+static bool32 MoveConditionsMatch(u8 moveTypeRule, u8 moveCategoryRule, u32 move, u8 moveType)
+{
+    if (moveTypeRule != TYPE_NONE && moveTypeRule != moveType)
         return FALSE;
 
-    if (selector->moveCategory != CURSE_MOVE_CATEGORY_ANY && selector->moveCategory != category)
+    if (moveCategoryRule != CURSE_MOVE_CATEGORY_ANY && moveCategoryRule != GetMoveCategory(move))
         return FALSE;
 
-    if (selector->minHpPct != 0)
+    return TRUE;
+}
+
+static bool32 MinHpMatches(u8 minHpPct, u32 battler)
+{
+    if (minHpPct != 0)
     {
         u32 maxHp = gBattleMons[battler].maxHP;
         u32 currHp = gBattleMons[battler].hp;
         u32 hpPct = (maxHp == 0) ? 0 : (currHp * 100) / maxHp;
 
-        if (hpPct < selector->minHpPct)
+        if (hpPct < minHpPct)
             return FALSE;
     }
 
     return TRUE;
 }
 
-static u32 CollectMatchingEffects(u8 effectType, u32 battler, u32 move, u8 moveType,
-                                   const u16 *curseIds, u32 count,
-                                   const struct CurseEffect *matched[])
+static bool32 TypeMatchupMatches(u8 typeMatchupRule, uq4_12_t typeEffectivenessModifier)
+{
+    switch (typeMatchupRule)
+    {
+    case CURSE_TYPE_MATCHUP_ANY:
+        return TRUE;
+    case CURSE_TYPE_MATCHUP_SUPER_EFFECTIVE_ONLY:
+        return (typeEffectivenessModifier > UQ_4_12(1.0));
+    case CURSE_TYPE_MATCHUP_NOT_VERY_EFFECTIVE_ONLY:
+        return (typeEffectivenessModifier > UQ_4_12(0.0) && typeEffectivenessModifier < UQ_4_12(1.0));
+    case CURSE_TYPE_MATCHUP_NEUTRAL_ONLY:
+        return (typeEffectivenessModifier == UQ_4_12(1.0));
+    default:
+        return FALSE;
+    }
+}
+
+static bool32 BattleDamageTakenParamsMatch(const struct CurseBattleDamageTakenParams *params, const struct DamageContext *ctx)
+{
+    if (!SideMatches(params->side, ctx->battlerDef))
+        return FALSE;
+
+    if (!MoveConditionsMatch(params->moveType, params->moveCategory, ctx->move, ctx->moveType))
+        return FALSE;
+
+    if (!MinHpMatches(params->minHpPct, ctx->battlerDef))
+        return FALSE;
+
+    if (!TypeMatchupMatches(params->typeMatchup, ctx->typeEffectivenessModifier))
+        return FALSE;
+
+    return TRUE;
+}
+
+static bool32 BattleAccuracyParamsMatch(const struct CurseBattleAccuracyFlatParams *params, u32 battlerAtk, u32 move, u8 moveType)
+{
+    if (!SideMatches(params->side, battlerAtk))
+        return FALSE;
+
+    if (!MoveConditionsMatch(params->moveType, params->moveCategory, move, moveType))
+        return FALSE;
+
+    if (!MinHpMatches(params->minHpPct, battlerAtk))
+        return FALSE;
+
+    return TRUE;
+}
+
+static u32 CollectEffectsByType(u8 effectType, const u16 *curseIds, u32 count, const struct CurseEffect *matched[])
 {
     u32 numMatched = 0;
     u32 i;
@@ -82,9 +135,6 @@ static u32 CollectMatchingEffects(u8 effectType, u32 battler, u32 move, u8 moveT
             if (effect->type != effectType)
                 continue;
 
-            if (!CurseSelectorMatches(&effect->selector, battler, move, moveType))
-                continue;
-
             if (numMatched < MAX_CURSE_MATCHED_EFFECTS)
                 matched[numMatched++] = effect;
         }
@@ -93,17 +143,25 @@ static u32 CollectMatchingEffects(u8 effectType, u32 battler, u32 move, u8 moveT
     return numMatched;
 }
 
-static uq4_12_t ApplyDamageStacking(uq4_12_t modifier, const struct CurseEffect *matched[], u32 count)
+static uq4_12_t ApplyDamageStacking(uq4_12_t modifier, const struct CurseEffect *matched[], u32 count, const struct DamageContext *ctx)
 {
     u32 i;
 
     for (i = 0; i < count; i++)
     {
+        const struct CurseBattleDamageTakenParams *params = matched[i]->params;
+
+        if (params == NULL)
+            continue;
+
+        if (!BattleDamageTakenParamsMatch(params, ctx))
+            continue;
+
         switch (matched[i]->stacking)
         {
         case CURSE_STACK_MULTIPLY:
         default:
-            modifier = uq4_12_multiply(modifier, matched[i]->multiplier);
+            modifier = uq4_12_multiply(modifier, params->multiplier);
             break;
         }
     }
@@ -111,17 +169,25 @@ static uq4_12_t ApplyDamageStacking(uq4_12_t modifier, const struct CurseEffect 
     return modifier;
 }
 
-static s32 ApplyAccuracyStacking(s32 bonus, const struct CurseEffect *matched[], u32 count)
+static s32 ApplyAccuracyStacking(s32 bonus, const struct CurseEffect *matched[], u32 count, u32 battlerAtk, u32 move, u8 moveType)
 {
     u32 i;
 
     for (i = 0; i < count; i++)
     {
+        const struct CurseBattleAccuracyFlatParams *params = matched[i]->params;
+
+        if (params == NULL)
+            continue;
+
+        if (!BattleAccuracyParamsMatch(params, battlerAtk, move, moveType))
+            continue;
+
         switch (matched[i]->stacking)
         {
         case CURSE_STACK_ADD_PCT:
         default:
-            bonus += (s32)matched[i]->multiplier;
+            bonus += params->flatBonus;
             break;
         }
     }
@@ -183,6 +249,7 @@ void Curse_InitDefaults(void)
     Curse_ClearActive();
     Curse_SetActiveBoon(0, CURSE_BOON_BULWARK);
     Curse_SetActiveBoon(1, CURSE_BOON_PRECISION);
+    Curse_SetActiveBane(0, CURSE_BANE_EXPOSED);
 }
 
 uq4_12_t Curse_GetDamageTakenModifier(const struct DamageContext *ctx)
@@ -194,13 +261,13 @@ uq4_12_t Curse_GetDamageTakenModifier(const struct DamageContext *ctx)
     if (gSaveBlock2Ptr == NULL)
         return modifier;
 
-    numMatched = CollectMatchingEffects(CURSE_EFF_DAMAGE_TAKEN_MULT, ctx->battlerDef, ctx->move, ctx->moveType,
-                                        gSaveBlock2Ptr->curses.activeBoons, CURSE_ACTIVE_BOON_SLOTS, matched);
-    modifier = ApplyDamageStacking(modifier, matched, numMatched);
+    numMatched = CollectEffectsByType(CURSE_EFF_DAMAGE_TAKEN_MULT,
+                                      gSaveBlock2Ptr->curses.activeBoons, CURSE_ACTIVE_BOON_SLOTS, matched);
+    modifier = ApplyDamageStacking(modifier, matched, numMatched, ctx);
 
-    numMatched = CollectMatchingEffects(CURSE_EFF_DAMAGE_TAKEN_MULT, ctx->battlerDef, ctx->move, ctx->moveType,
-                                        gSaveBlock2Ptr->curses.activeBanes, CURSE_ACTIVE_BANE_SLOTS, matched);
-    modifier = ApplyDamageStacking(modifier, matched, numMatched);
+    numMatched = CollectEffectsByType(CURSE_EFF_DAMAGE_TAKEN_MULT,
+                                      gSaveBlock2Ptr->curses.activeBanes, CURSE_ACTIVE_BANE_SLOTS, matched);
+    modifier = ApplyDamageStacking(modifier, matched, numMatched, ctx);
 
     return modifier;
 }
@@ -210,17 +277,20 @@ s32 Curse_GetAccuracyBonus(u32 battlerAtk, u32 move)
     const struct CurseEffect *matched[MAX_CURSE_MATCHED_EFFECTS];
     s32 bonus = 0;
     u32 numMatched;
+    u8 moveType;
 
     if (gSaveBlock2Ptr == NULL)
         return 0;
 
-    numMatched = CollectMatchingEffects(CURSE_EFF_ACCURACY_FLAT_BONUS, battlerAtk, move, GetMoveType(move),
-                                        gSaveBlock2Ptr->curses.activeBoons, CURSE_ACTIVE_BOON_SLOTS, matched);
-    bonus = ApplyAccuracyStacking(bonus, matched, numMatched);
+    moveType = GetMoveType(move);
 
-    numMatched = CollectMatchingEffects(CURSE_EFF_ACCURACY_FLAT_BONUS, battlerAtk, move, GetMoveType(move),
-                                        gSaveBlock2Ptr->curses.activeBanes, CURSE_ACTIVE_BANE_SLOTS, matched);
-    bonus = ApplyAccuracyStacking(bonus, matched, numMatched);
+    numMatched = CollectEffectsByType(CURSE_EFF_ACCURACY_FLAT_BONUS,
+                                      gSaveBlock2Ptr->curses.activeBoons, CURSE_ACTIVE_BOON_SLOTS, matched);
+    bonus = ApplyAccuracyStacking(bonus, matched, numMatched, battlerAtk, move, moveType);
+
+    numMatched = CollectEffectsByType(CURSE_EFF_ACCURACY_FLAT_BONUS,
+                                      gSaveBlock2Ptr->curses.activeBanes, CURSE_ACTIVE_BANE_SLOTS, matched);
+    bonus = ApplyAccuracyStacking(bonus, matched, numMatched, battlerAtk, move, moveType);
 
     return bonus;
 }

@@ -7,20 +7,30 @@
 
 struct DamageContext;
 
-struct CurseSelector
+struct CurseBattleDamageTakenParams
 {
     u8 side;
     u8 moveType;
     u8 moveCategory;
     u8 minHpPct;
+    u8 typeMatchup;
+    uq4_12_t multiplier;
+};
+
+struct CurseBattleAccuracyFlatParams
+{
+    u8 side;
+    u8 moveType;
+    u8 moveCategory;
+    u8 minHpPct;
+    s16 flatBonus;
 };
 
 struct CurseEffect
 {
     u8 type;
     u8 stacking;
-    struct CurseSelector selector;
-    uq4_12_t multiplier;
+    const void *params;
 };
 
 struct CurseDef
