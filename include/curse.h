@@ -40,6 +40,9 @@ struct CursesSaveData
 void Curse_InitDefaults(void);
 void Curse_ClearActive(void);
 void Curse_SetActiveBoon(u8 slot, u16 curseId);
+void Curse_SetActiveBane(u8 slot, u16 curseId);
+u16 Curse_GetActiveBoon(u8 slot);
+u16 Curse_GetActiveBane(u8 slot);
 uq4_12_t Curse_GetDamageTakenModifier(const struct DamageContext *ctx);
 u16 Curse_GetCount(void);
 const struct CurseDef *Curse_GetDef(u16 curseId);

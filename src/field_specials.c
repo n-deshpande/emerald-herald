@@ -4,6 +4,7 @@
 #include "battle.h"
 #include "battle_tower.h"
 #include "cable_club.h"
+#include "curse_menu.h"
 #include "data.h"
 #include "decoration.h"
 #include "diploma.h"
@@ -169,6 +170,12 @@ void Special_ShowDiploma(void)
 void Special_InitCurses(void)
 {
     Curse_InitDefaults();
+}
+
+void Special_OpenCurseMenu(void)
+{
+    ShowCurseMenu(CB2_ReturnToFieldContinueScriptPlayMapMusic);
+    LockPlayerFieldControls();
 }
 
 void Special_ViewWallClock(void)
