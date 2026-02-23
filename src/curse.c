@@ -142,10 +142,40 @@ void Curse_ClearActive(void)
 
 void Curse_SetActiveBoon(u8 slot, u16 curseId)
 {
+    if (gSaveBlock2Ptr == NULL)
+        return;
+
     if (slot >= CURSE_ACTIVE_BOON_SLOTS)
         return;
 
     gSaveBlock2Ptr->curses.activeBoons[slot] = curseId;
+}
+
+void Curse_SetActiveBane(u8 slot, u16 curseId)
+{
+    if (gSaveBlock2Ptr == NULL)
+        return;
+
+    if (slot >= CURSE_ACTIVE_BANE_SLOTS)
+        return;
+
+    gSaveBlock2Ptr->curses.activeBanes[slot] = curseId;
+}
+
+u16 Curse_GetActiveBoon(u8 slot)
+{
+    if (gSaveBlock2Ptr == NULL || slot >= CURSE_ACTIVE_BOON_SLOTS)
+        return CURSE_NONE;
+
+    return gSaveBlock2Ptr->curses.activeBoons[slot];
+}
+
+u16 Curse_GetActiveBane(u8 slot)
+{
+    if (gSaveBlock2Ptr == NULL || slot >= CURSE_ACTIVE_BANE_SLOTS)
+        return CURSE_NONE;
+
+    return gSaveBlock2Ptr->curses.activeBanes[slot];
 }
 
 void Curse_InitDefaults(void)
