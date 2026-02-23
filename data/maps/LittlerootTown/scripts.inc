@@ -37,6 +37,7 @@ LittlerootTown_MapScripts::
 LittlerootTown_OnTransition:
 	setflag FLAG_VISITED_LITTLEROOT_TOWN
 	call Common_EventScript_SetupRivalGfxId
+	call_if_ge VAR_LITTLEROOT_RIVAL_STATE, 3, LittlerootTown_EventScript_EnableStarterLabFlow
 	call_if_eq VAR_LITTLEROOT_INTRO_STATE, 2, LittlerootTown_EventScript_MoveMomToMaysDoor
 	call_if_unset FLAG_RESCUED_BIRCH, LittlerootTown_EventScript_SetTwinPos
 	call_if_eq VAR_LITTLEROOT_TOWN_STATE, 3, LittlerootTown_EventScript_SetMomStandingInFrontOfDoorPos
@@ -47,6 +48,15 @@ LittlerootTown_OnTransition:
 	call_if_eq VAR_DEX_UPGRADE_JOHTO_STARTER_STATE, 1, LittlerootTown_EventScript_HideMapNamePopup
 	call_if_eq VAR_DEX_UPGRADE_JOHTO_STARTER_STATE, 2, LittlerootTown_EventScript_LeftLabAfterDexUpgrade
 	end
+
+LittlerootTown_EventScript_EnableStarterLabFlow::
+	goto_if_set FLAG_RESCUED_BIRCH, LittlerootTown_EventScript_EnableStarterLabFlowDone
+	clearflag FLAG_HIDE_LITTLEROOT_TOWN_BIRCHS_LAB_BIRCH
+	goto_if_ge VAR_BIRCH_LAB_STATE, 1, LittlerootTown_EventScript_EnableStarterLabFlowDone
+	setvar VAR_BIRCH_LAB_STATE, 1
+
+LittlerootTown_EventScript_EnableStarterLabFlowDone::
+	return
 
 LittlerootTown_EventScript_LeftLabAfterDexUpgrade::
 	setvar VAR_DEX_UPGRADE_JOHTO_STARTER_STATE, 3
@@ -271,8 +281,6 @@ LittlerootTown_EventScript_GoSaveBirch::
 	closemessage
 	applymovement LOCALID_LITTLEROOT_TWIN, Common_Movement_FaceOriginalDirection
 	waitmovement 0
-	setvar VAR_BIRCH_LAB_STATE, 1
-	clearflag FLAG_HIDE_LITTLEROOT_TOWN_BIRCHS_LAB_BIRCH
 	setvar VAR_LITTLEROOT_TOWN_STATE, 2
 	release
 	end
@@ -381,6 +389,7 @@ LittlerootTown_Movement_TwinReturnRight:
 	step_end
 
 LittlerootTown_EventScript_GoSaveBirchTrigger::
+	goto_if_set FLAG_RESCUED_BIRCH, LittlerootTown_EventScript_GoSaveBirchTriggerDone
 	lockall
 	applymovement LOCALID_LITTLEROOT_TWIN, Common_Movement_WalkInPlaceFasterRight
 	waitmovement 0
@@ -391,10 +400,12 @@ LittlerootTown_EventScript_GoSaveBirchTrigger::
 	closemessage
 	applymovement LOCALID_LITTLEROOT_TWIN, Common_Movement_FaceOriginalDirection
 	waitmovement 0
-	setvar VAR_BIRCH_LAB_STATE, 1
-	clearflag FLAG_HIDE_LITTLEROOT_TOWN_BIRCHS_LAB_BIRCH
 	setvar VAR_LITTLEROOT_TOWN_STATE, 2
 	releaseall
+	end
+
+LittlerootTown_EventScript_GoSaveBirchTriggerDone::
+	setvar VAR_LITTLEROOT_TOWN_STATE, 2
 	end
 
 LittlerootTown_EventScript_GoToBirchLabTrigger::
