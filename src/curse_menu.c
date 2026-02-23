@@ -3,7 +3,9 @@
 #include "curse.h"
 #include "curse_menu.h"
 #include "gpu_regs.h"
+#include "international_string_util.h"
 #include "main.h"
+#include "malloc.h"
 #include "menu.h"
 #include "palette.h"
 #include "scanline_effect.h"
@@ -60,6 +62,15 @@ static const struct BgTemplate sBgTemplates[] =
         .priority = 0,
         .baseTile = 0,
     },
+    {
+        .bg = 1,
+        .charBaseIndex = 0,
+        .mapBaseIndex = 30,
+        .screenSize = 0,
+        .paletteMode = 0,
+        .priority = 1,
+        .baseTile = 0,
+    },
 };
 
 static const struct WindowTemplate sWindowTemplates[] =
@@ -85,20 +96,20 @@ static const struct WindowTemplate sWindowTemplates[] =
     [WIN_LIST] = {
         .bg = 0,
         .tilemapLeft = 0,
-        .tilemapTop = 4,
+        .tilemapTop = 5,
         .width = 12,
-        .height = 12,
+        .height = 11,
         .paletteNum = 15,
         .baseBlock = 121,
     },
     [WIN_DETAIL] = {
         .bg = 0,
         .tilemapLeft = 12,
-        .tilemapTop = 4,
+        .tilemapTop = 5,
         .width = 18,
-        .height = 12,
+        .height = 11,
         .paletteNum = 15,
-        .baseBlock = 265,
+        .baseBlock = 253,
     },
     [WIN_FOOTER] = {
         .bg = 0,
@@ -107,7 +118,7 @@ static const struct WindowTemplate sWindowTemplates[] =
         .width = 30,
         .height = 3,
         .paletteNum = 15,
-        .baseBlock = 481,
+        .baseBlock = 451,
     },
     DUMMY_WIN_TEMPLATE,
 };
@@ -123,6 +134,10 @@ static const u8 sText_Footer[] = _("L/R: TAB   B: EXIT");
 
 static const u8 sTextColors_Selected[] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_WHITE, TEXT_COLOR_DARK_GRAY};
 static const u8 sTextColors_Unselected[] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_LIGHT_GRAY, TEXT_COLOR_DARK_GRAY};
+static const u8 sTextColors_Boon[] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_GREEN, TEXT_COLOR_DARK_GRAY};
+static const u8 sTextColors_BoonDim[] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_LIGHT_GREEN, TEXT_COLOR_DARK_GRAY};
+static const u8 sTextColors_Bane[] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_RED, TEXT_COLOR_DARK_GRAY};
+static const u8 sTextColors_BaneDim[] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_LIGHT_RED, TEXT_COLOR_DARK_GRAY};
 
 static void VBlankCB_CurseMenu(void)
 {
@@ -169,7 +184,7 @@ static void DrawHeader(void)
 {
     s32 x;
 
-    FillWindowPixelBuffer(WIN_HEADER, PIXEL_FILL(1));
+    FillWindowPixelBuffer(WIN_HEADER, PIXEL_FILL(0));
     x = GetStringCenterAlignXOffset(FONT_NORMAL, sText_Curses, 30 * 8);
     AddTextPrinterParameterized3(WIN_HEADER, FONT_NORMAL, x, 1, sTextColors_Selected, TEXT_SKIP_DRAW, sText_Curses);
     CopyWindowToVram(WIN_HEADER, COPYWIN_FULL);
@@ -177,10 +192,10 @@ static void DrawHeader(void)
 
 static void DrawTabs(void)
 {
-    const u8 *boonColors = (sCurseMenu->tab == CURSE_TAB_BOONS) ? sTextColors_Selected : sTextColors_Unselected;
-    const u8 *baneColors = (sCurseMenu->tab == CURSE_TAB_BANES) ? sTextColors_Selected : sTextColors_Unselected;
+    const u8 *boonColors = (sCurseMenu->tab == CURSE_TAB_BOONS) ? sTextColors_Boon : sTextColors_BoonDim;
+    const u8 *baneColors = (sCurseMenu->tab == CURSE_TAB_BANES) ? sTextColors_Bane : sTextColors_BaneDim;
 
-    FillWindowPixelBuffer(WIN_TABS, PIXEL_FILL(1));
+    FillWindowPixelBuffer(WIN_TABS, PIXEL_FILL(0));
     AddTextPrinterParameterized3(WIN_TABS, FONT_NORMAL, 36, 1, boonColors, TEXT_SKIP_DRAW, sText_Boons);
     AddTextPrinterParameterized3(WIN_TABS, FONT_NORMAL, 132, 1, baneColors, TEXT_SKIP_DRAW, sText_Banes);
     CopyWindowToVram(WIN_TABS, COPYWIN_FULL);
@@ -363,7 +378,8 @@ static void InitWindowFrames(void)
     for (i = 0; i < WIN_COUNT; i++)
     {
         PutWindowTilemap(i);
-        DrawStdWindowFrame(i, FALSE);
+        if (i >= WIN_LIST)
+            DrawStdWindowFrame(i, FALSE);
     }
 }
 
@@ -385,14 +401,20 @@ static void CB2_InitCurseMenu(void)
         InitBgsFromTemplates(0, sBgTemplates, ARRAY_COUNT(sBgTemplates));
         ChangeBgX(0, 0, BG_COORD_SET);
         ChangeBgY(0, 0, BG_COORD_SET);
+        ChangeBgX(1, 0, BG_COORD_SET);
+        ChangeBgY(1, 0, BG_COORD_SET);
+
+        FillBgTilemapBufferRect_Palette0(1, 0, 0, 0, 30, 20);
+        CopyBgTilemapBufferToVram(1);
 
         InitWindows(sWindowTemplates);
         DeactivateAllTextPrinters();
 
         SetGpuReg(REG_OFFSET_BLDCNT, 0);
         SetGpuReg(REG_OFFSET_BLDY, 0);
-        SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_MODE_0 | DISPCNT_BG0_ON | DISPCNT_OBJ_ON | DISPCNT_OBJ_1D_MAP);
+        SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_MODE_0 | DISPCNT_BG0_ON | DISPCNT_BG1_ON | DISPCNT_OBJ_ON | DISPCNT_OBJ_1D_MAP);
         ShowBg(0);
+        ShowBg(1);
         gMain.state++;
         break;
     case 2:
