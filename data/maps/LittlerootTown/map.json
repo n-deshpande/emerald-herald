@@ -173,12 +173,39 @@
     },
     {
       "type": "trigger",
+      "x": 10,
+      "y": 1,
+      "elevation": 3,
+      "var": "VAR_LITTLEROOT_TOWN_STATE",
+      "var_value": "1",
+      "script": "LittlerootTown_EventScript_GoSaveBirchTrigger"
+    },
+    {
+      "type": "trigger",
       "x": 11,
       "y": 1,
       "elevation": 3,
       "var": "VAR_LITTLEROOT_TOWN_STATE",
       "var_value": "1",
       "script": "LittlerootTown_EventScript_GoSaveBirchTrigger"
+    },
+    {
+      "type": "trigger",
+      "x": 10,
+      "y": 1,
+      "elevation": 3,
+      "var": "VAR_LITTLEROOT_TOWN_STATE",
+      "var_value": "2",
+      "script": "LittlerootTown_EventScript_GoToBirchLabTrigger"
+    },
+    {
+      "type": "trigger",
+      "x": 11,
+      "y": 1,
+      "elevation": 3,
+      "var": "VAR_LITTLEROOT_TOWN_STATE",
+      "var_value": "2",
+      "script": "LittlerootTown_EventScript_GoToBirchLabTrigger"
     },
     {
       "type": "trigger",

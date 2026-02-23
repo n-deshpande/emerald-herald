@@ -254,8 +254,14 @@ LittlerootTown_EventScript_Twin::
 	faceplayer
 	goto_if_set FLAG_ADVENTURE_STARTED, LittlerootTown_EventScript_GoodLuck
 	goto_if_set FLAG_RESCUED_BIRCH, LittlerootTown_EventScript_YouSavedBirch
-	goto_if_ne VAR_LITTLEROOT_TOWN_STATE, 0, LittlerootTown_EventScript_GoSaveBirch
+	goto_if_eq VAR_LITTLEROOT_TOWN_STATE, 1, LittlerootTown_EventScript_HeadToBirchLab
+	goto_if_eq VAR_LITTLEROOT_TOWN_STATE, 2, LittlerootTown_EventScript_HeadToBirchLab
 	msgbox LittlerootTown_Text_IfYouGoInGrassPokemonWillJumpOut, MSGBOX_DEFAULT
+	release
+	end
+
+LittlerootTown_EventScript_HeadToBirchLab::
+	msgbox LittlerootTown_Text_CanYouGoSeeWhatsHappening, MSGBOX_DEFAULT
 	release
 	end
 
@@ -265,6 +271,8 @@ LittlerootTown_EventScript_GoSaveBirch::
 	closemessage
 	applymovement LOCALID_LITTLEROOT_TWIN, Common_Movement_FaceOriginalDirection
 	waitmovement 0
+	setvar VAR_BIRCH_LAB_STATE, 1
+	clearflag FLAG_HIDE_LITTLEROOT_TOWN_BIRCHS_LAB_BIRCH
 	setvar VAR_LITTLEROOT_TOWN_STATE, 2
 	release
 	end
@@ -383,8 +391,23 @@ LittlerootTown_EventScript_GoSaveBirchTrigger::
 	closemessage
 	applymovement LOCALID_LITTLEROOT_TWIN, Common_Movement_FaceOriginalDirection
 	waitmovement 0
+	setvar VAR_BIRCH_LAB_STATE, 1
+	clearflag FLAG_HIDE_LITTLEROOT_TOWN_BIRCHS_LAB_BIRCH
 	setvar VAR_LITTLEROOT_TOWN_STATE, 2
 	releaseall
+	end
+
+LittlerootTown_EventScript_GoToBirchLabTrigger::
+	goto_if_set FLAG_RESCUED_BIRCH, LittlerootTown_EventScript_GoToBirchLabTriggerDone
+	lockall
+	msgbox LittlerootTown_Text_BirchWaitingInLab, MSGBOX_DEFAULT
+	closemessage
+	applymovement LOCALID_PLAYER, LittlerootTown_Movement_PushPlayerBackFromRoute
+	waitmovement 0
+	releaseall
+	end
+
+LittlerootTown_EventScript_GoToBirchLabTriggerDone::
 	end
 
 LittlerootTown_EventScript_TownSign::
@@ -982,16 +1005,22 @@ LittlerootTown_Text_DangerousIfYouDontHavePokemon:
 
 LittlerootTown_Text_CanYouGoSeeWhatsHappening:
 	.string "Um, hi!\p"
-	.string "There are scary POKéMON outside!\n"
-	.string "I can hear their cries!\p"
-	.string "I want to go see what's going on,\n"
-	.string "but I don't have any POKéMON…\p"
-	.string "Can you go see what's happening\n"
-	.string "for me?$"
+	.string "PROF. BIRCH rushed back to his LAB.\n"
+	.string "He said the road north is no place\l"
+	.string "for bare hands.\p"
+	.string "If you mean to go out, please go to\n"
+	.string "his LAB and take a partner first.$"
 
 LittlerootTown_Text_YouSavedBirch:
-	.string "You saved PROF. BIRCH!\n"
-	.string "I'm so glad!$"
+	.string "PROF. BIRCH trusted you with a\n"
+	.string "POKéMON.\p"
+	.string "May it keep you steady out there.$"
+
+LittlerootTown_Text_BirchWaitingInLab:
+	.string "The road beyond this town still bites.\p"
+	.string "PROF. BIRCH is waiting in his LAB.\n"
+	.string "Choose your first partner before\l"
+	.string "you leave.$"
 
 LittlerootTown_Text_GoodLuckCatchingPokemon:
 	.string "Are you going to catch POKéMON?\n"
