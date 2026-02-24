@@ -1,0 +1,64 @@
+#ifndef GUARD_CONSTANTS_RELICS_H
+#define GUARD_CONSTANTS_RELICS_H
+
+// Relic ids (update RELIC_COUNT when adding new ids)
+#define RELIC_NONE 0
+#define RELIC_BULWARK 1
+#define RELIC_PRECISION 2
+#define RELIC_EXPOSED 3
+#define RELIC_COUNT 4
+
+// Effect types
+enum RelicEffectType
+{
+    RELIC_EFF_DAMAGE_TAKEN_MULT,
+    RELIC_EFF_ACCURACY_FLAT_BONUS,
+};
+
+// Stacking rules
+enum RelicStacking
+{
+    RELIC_STACK_MULTIPLY,
+    RELIC_STACK_ADD_PCT,
+    RELIC_STACK_MAX,
+    RELIC_STACK_MIN,
+    RELIC_STACK_OVERRIDE,
+};
+
+// Selector values
+enum RelicSide
+{
+    RELIC_SIDE_PLAYER,
+    RELIC_SIDE_OPPONENT,
+    RELIC_SIDE_BOTH,
+};
+
+enum RelicTypeMatchup
+{
+    RELIC_TYPE_MATCHUP_ANY,
+    RELIC_TYPE_MATCHUP_SUPER_EFFECTIVE_ONLY,
+    RELIC_TYPE_MATCHUP_NOT_VERY_EFFECTIVE_ONLY,
+    RELIC_TYPE_MATCHUP_NEUTRAL_ONLY,
+};
+
+#define RELIC_MOVE_CATEGORY_ANY 0xFF
+
+// Rarity levels
+enum RelicRarity
+{
+    RELIC_RARITY_COMMON,
+    RELIC_RARITY_UNCOMMON,
+    RELIC_RARITY_RARE,
+};
+
+// Tier constants
+#define RELIC_TIER_1 0
+#define RELIC_TIER_2 1
+#define RELIC_TIER_3 2
+#define RELIC_MAX_TIER 2
+#define RELIC_NUM_TIERS 3
+
+// Active slots
+#define RELIC_SLOTS 5
+
+#endif // GUARD_CONSTANTS_RELICS_H

@@ -11,7 +11,7 @@
 #include "battle_z_move.h"
 #include "battle_gimmick.h"
 #include "battle_hold_effects.h"
-#include "curse.h"
+#include "relic.h"
 #include "generational_changes.h"
 #include "party_menu.h"
 #include "pokemon.h"
@@ -8581,7 +8581,7 @@ s32 ApplyModifiersAfterDmgRoll(struct DamageContext *ctx, s32 dmg)
     DAMAGE_APPLY_MODIFIER(GetBurnOrFrostBiteModifier(ctx));
     DAMAGE_APPLY_MODIFIER(GetZMaxMoveAgainstProtectionModifier(ctx));
     DAMAGE_APPLY_MODIFIER(GetOtherModifiers(ctx));
-    DAMAGE_APPLY_MODIFIER(Curse_GetDamageTakenModifier(ctx));
+    DAMAGE_APPLY_MODIFIER(Relic_GetDamageTakenModifier(ctx));
 
     return dmg;
 }
@@ -10985,12 +10985,12 @@ u32 GetTotalAccuracy(u32 battlerAtk, u32 battlerDef, u32 move, enum Ability atkA
 
     moveAcc = GetMoveAccuracy(move);
 
-    // Curse accuracy bonus (flat, applied to base accuracy, capped at 100)
+    // Relic accuracy bonus (flat, applied to base accuracy, capped at 100)
     {
-        s32 curseBonus = Curse_GetAccuracyBonus(battlerAtk, move);
-        if (curseBonus != 0)
+        s32 relicBonus = Relic_GetAccuracyBonus(battlerAtk, move);
+        if (relicBonus != 0)
         {
-            moveAcc += curseBonus;
+            moveAcc += relicBonus;
             if (moveAcc > 100)
                 moveAcc = 100;
         }

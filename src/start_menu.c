@@ -3,7 +3,7 @@
 #include "battle_pyramid.h"
 #include "battle_pyramid_bag.h"
 #include "bg.h"
-#include "curse_menu.h"
+#include "relic_menu.h"
 #include "debug.h"
 #include "event_data.h"
 #include "event_object_movement.h"
@@ -58,7 +58,7 @@ enum
     MENU_ACTION_POKEMON,
     MENU_ACTION_BAG,
     MENU_ACTION_POKENAV,
-    MENU_ACTION_CURSES,
+    MENU_ACTION_RELICS,
     MENU_ACTION_PLAYER,
     MENU_ACTION_SAVE,
     MENU_ACTION_OPTION,
@@ -102,7 +102,7 @@ static bool8 StartMenuPokedexCallback(void);
 static bool8 StartMenuPokemonCallback(void);
 static bool8 StartMenuBagCallback(void);
 static bool8 StartMenuPokeNavCallback(void);
-static bool8 StartMenuCursesCallback(void);
+static bool8 StartMenuRelicsCallback(void);
 static bool8 StartMenuPlayerNameCallback(void);
 static bool8 StartMenuSaveCallback(void);
 static bool8 StartMenuOptionCallback(void);
@@ -197,7 +197,7 @@ static const struct MenuAction sStartMenuItems[] =
     [MENU_ACTION_POKEMON]         = {gText_MenuPokemon, {.u8_void = StartMenuPokemonCallback}},
     [MENU_ACTION_BAG]             = {gText_MenuBag,     {.u8_void = StartMenuBagCallback}},
     [MENU_ACTION_POKENAV]         = {gText_MenuPokenav, {.u8_void = StartMenuPokeNavCallback}},
-    [MENU_ACTION_CURSES]          = {gText_MenuCurses,  {.u8_void = StartMenuCursesCallback}},
+    [MENU_ACTION_RELICS]          = {gText_MenuRelics,  {.u8_void = StartMenuRelicsCallback}},
     [MENU_ACTION_PLAYER]          = {gText_MenuPlayer,  {.u8_void = StartMenuPlayerNameCallback}},
     [MENU_ACTION_SAVE]            = {gText_MenuSave,    {.u8_void = StartMenuSaveCallback}},
     [MENU_ACTION_OPTION]          = {gText_MenuOption,  {.u8_void = StartMenuOptionCallback}},
@@ -334,12 +334,12 @@ static void AddStartMenuAction(u8 action)
 
 static void BuildNormalStartMenu(void)
 {
-    bool8 showCurses = FlagGet(FLAG_CURSES_INITIALIZED);
+    bool8 showRelics = FlagGet(FLAG_RELICS_INITIALIZED);
 
     if (FlagGet(FLAG_SYS_POKEDEX_GET) == TRUE)
         AddStartMenuAction(MENU_ACTION_POKEDEX);
 
-    if (!showCurses && DN_FLAG_DEXNAV_GET != 0 && FlagGet(DN_FLAG_DEXNAV_GET))
+    if (!showRelics && DN_FLAG_DEXNAV_GET != 0 && FlagGet(DN_FLAG_DEXNAV_GET))
         AddStartMenuAction(MENU_ACTION_DEXNAV);
 
     if (FlagGet(FLAG_SYS_POKEMON_GET) == TRUE)
@@ -350,8 +350,8 @@ static void BuildNormalStartMenu(void)
     if (FlagGet(FLAG_SYS_POKENAV_GET) == TRUE)
         AddStartMenuAction(MENU_ACTION_POKENAV);
 
-    if (showCurses)
-        AddStartMenuAction(MENU_ACTION_CURSES);
+    if (showRelics)
+        AddStartMenuAction(MENU_ACTION_RELICS);
 
     AddStartMenuAction(MENU_ACTION_PLAYER);
     AddStartMenuAction(MENU_ACTION_SAVE);
@@ -361,7 +361,7 @@ static void BuildNormalStartMenu(void)
 
 static void BuildDebugStartMenu(void)
 {
-    bool8 showCurses = FlagGet(FLAG_CURSES_INITIALIZED);
+    bool8 showRelics = FlagGet(FLAG_RELICS_INITIALIZED);
 
     AddStartMenuAction(MENU_ACTION_DEBUG);
     if (FlagGet(FLAG_SYS_POKEDEX_GET) == TRUE)
@@ -371,8 +371,8 @@ static void BuildDebugStartMenu(void)
     AddStartMenuAction(MENU_ACTION_BAG);
     if (FlagGet(FLAG_SYS_POKENAV_GET) == TRUE)
         AddStartMenuAction(MENU_ACTION_POKENAV);
-    if (showCurses)
-        AddStartMenuAction(MENU_ACTION_CURSES);
+    if (showRelics)
+        AddStartMenuAction(MENU_ACTION_RELICS);
     AddStartMenuAction(MENU_ACTION_PLAYER);
     AddStartMenuAction(MENU_ACTION_SAVE);
     AddStartMenuAction(MENU_ACTION_OPTION);
@@ -743,14 +743,14 @@ static bool8 StartMenuPokeNavCallback(void)
     return FALSE;
 }
 
-static bool8 StartMenuCursesCallback(void)
+static bool8 StartMenuRelicsCallback(void)
 {
     if (!gPaletteFade.active)
     {
         PlayRainStoppingSoundEffect();
         RemoveExtraStartMenuWindows();
         CleanupOverworldWindowsAndTilemaps();
-        ShowCurseMenu(CB2_ReturnToFieldWithOpenMenu);
+        ShowRelicMenu(CB2_ReturnToFieldWithOpenMenu);
 
         return TRUE;
     }

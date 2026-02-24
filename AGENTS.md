@@ -106,25 +106,25 @@ Config philosophy:
 - Developer QoL or modern Pokemon emulation: ON by default
 - All other configs: OFF by default
 
-## Curse System (custom persistent battle modifiers)
+## Relic System (custom persistent battle modifiers)
 
-See `docs/CURSES.md` for full details.
+See `docs/RELICS.md` for full details.
 
 Important rules:
 - Strings in data tables: use `COMPOUND_STRING("text")` for pointer fields (`const u8 *`). Never use `_("text")` there.
 - Script macros: `goto_if_set` takes two args: `goto_if_set FLAG, LABEL` (do not split).
-- Adding curses: update `include/constants/curses.h`, bump `CURSE_COUNT`, add effects array + definition in `src/data/curses.h`. There is a static assert for count mismatch.
-- Testing curses: use `PARAMETRIZE`, `captureDamage`, `EXPECT_MUL_EQ` in `test/battle/curse/`.
+- Adding relics: update `include/constants/relics.h`, bump `RELIC_COUNT`, add per-tier effects arrays + definition in `src/data/relics.h`. There is a static assert for count mismatch.
+- Testing relics: use `PARAMETRIZE`, `captureDamage`, `EXPECT_MUL_EQ` in `test/battle/relic/`. Test all 3 tiers.
 
 ## Project Direction (docs/GAMEDESIGN.md)
 
 `docs/GAMEDESIGN.md` is a design bible for "Pokemon Emerald Herald: Bearer of the Curse". It describes the intended future path and priorities for this repo's romhack direction:
 
 - Vision: a vanilla-plus Emerald experience with Soulsborne-inspired difficulty, replayability, and competitive-grade battles.
-- Signature mechanic: procedural Banes/Boons (curates from a pool, seeded by Trainer ID), plus Legacy Dungeons that remove a chosen Bane.
+- Signature mechanic: procedural Relics (curates from a pool, seeded by Trainer ID), with upgrade tiers and rarity levels, plus Legacy Dungeons.
 - Battle/encounter goals: competitive trainer teams (items/EVs/movesets), no mid-battle healing item spam, and early access to strong Pokemon.
 - QoL priorities: P0/P1/P2 feature lists (e.g., infinite TMs/rare candies, HM removal, early move relearner, EV items).
-- Roadmap phases: foundation (curse system), QoL/encounters, trainer teams + AI, legacy dungeons, polish/balance, then postgame.
+- Roadmap phases: foundation (relic system), QoL/encounters, trainer teams + AI, legacy dungeons, polish/balance, then postgame.
 
 ## Contribution Notes
 
