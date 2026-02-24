@@ -1,852 +1,381 @@
-**POKEMON: EMERALD HERALD**
+# POKEMON: EMERALD HERALD
+## Bearer of the Curse
+### Complete Design & Feature Bible
 
-**BEARER OF THE CURSE**
+*Version 2.0 — February 2026*
 
-*Complete Design & Feature Bible*
+---
 
-Version 1.0
+# 1. Executive Summary
 
-January 2026
+## Project Vision
 
-# **1\. Executive Summary**
+Pokemon Emerald Herald is a romhack that transforms Pokemon Emerald into a challenging, replayable experience inspired by Soulsborne design philosophy and roguelike games (Balatro, Risk of Rain 2). The hack maintains the core Hoenn journey while introducing a layered Relic system, Mark-based difficulty selection, and competitive-grade authored battles.
 
-## **Project Vision**
+## Core Pillars
 
-Pokemon Emerald Herald is a vanilla-plus romhack that transforms Pokemon Emerald into a challenging, replayable experience inspired by Soulsborne design philosophy. The hack maintains the core Hoenn journey while introducing procedurally-generated curses that create unique playthroughs, competitive-grade battles, and mysterious Legacy Dungeons.
+- **Challenging but Fair:** Elden Ring-style difficulty with powerful tools available to players. Difficulty through strategy, not tedium.
+- **High Replayability:** Relic acquisition and mark selection create meaningfully different runs without requiring massive content pools.
+- **Competitive Battles:** Static, thoughtfully authored trainer teams with full competitive sets. Difficulty tiers via marks.
+- **Quality of Life First:** Minimise grinding, maximise team experimentation.
+- **Respectful Enhancement:** Preserve Emerald's story beats while elevating gameplay.
 
-## **Core Pillars**
+## Key Differentiators
 
-* Challenging but Fair: Elden Ring-style difficulty with powerful tools available to players
+- **Mark System:** Pre-game difficulty ladder of permanent global obligations — opt-in, additive, player-authored challenge. Think Balatro's stake system of layered difficulty increases.
+- **Relic System:** 5-slot in-run progression inspired by Balatro's joker economy. Acquire, upgrade, and trade relics across milestones.
+- **Mark-Tiered Trainer Teams:** Major trainers have three authored team tiers selected by active mark level. Simple conditional logic, significant variety.
+- **Wild Encounter Variance:** Expanded encounter tables with seed-influenced slots provide team-building diversity across runs.
+- **Legacy Dungeons:** Three optional challenge dungeons rewarding rare Pokemon encounters.
 
-* High Replayability: Procedural Curse system creates unique runs from Trainer ID seed
+## Target Audience
 
-* Competitive Battles: NPCs use full competitive teams with items, EVs, and strategic movesets
+Experienced Pokemon players seeking challenge and replayability. Players who enjoy Soulsborne games (Dark Souls, Elden Ring), Balatro and roguelike card-builders, competitive Pokemon formats, and Nuzlocke challenges.
 
-* Quality of Life First: Minimize grinding, maximize team experimentation
+---
 
-* Respectful Enhancement: Preserve Emerald's story beats while elevating gameplay
+# 2. The Mark System
 
-## **Key Differentiators**
+## Overview
 
-* Bearer of the Curse: Unique procedural Bane/Boon system (50 each, pick 3+3)
+Marks are permanent, global obligations chosen before the run begins at the new game screen when speaking to Professor Birch. They are the difficulty slider. Each mark is a known, predetermined effect — no surprises, no randomness. Players know exactly what they're signing up for.
 
-* Legacy Dungeons: Three impossible-space dungeons with Curse removal rewards
+Marks do **not** occupy relic slots. They are a separate layer that modifies the run's ruleset globally. Marks are additive,  taking mark 3 means mark 1 and 2 are also active.
+##  The Mark Ladder
 
-* Seeded Encounters: 20% of wild encounters determined by player's unique seed
+Note this is still subject to change
 
-* No Item Spam: Competitive-style battles without mid-battle healing items
+| Mark | Name           | Effect                                                                                                    |
+| ---- | -------------- | --------------------------------------------------------------------------------------------------------- |
+| 1    | *Worn Stone*   | Bag healing items (Potions, Revives) banned during all trainer battles. Baseline expectation of the hack. |
+| 2    | *Hollow Bones* | All trainer Pokemon have competitive EVs, optimal natures, and held items.                                |
+| 3    | *Iron Shackle* | Relic slot cap reduces from 5 to 4. Every relic choice matters more.                                      |
+| 4    | *Blood Tithe*  | Pokemon Center healing costs money, scaling with badge count.                                             |
+| 5    | *Cursed Blood* | Starter is randomly assigned from the full starter pool, unknown until received.                          |
+| 6    | *The Abyss*    | Permadeath. Fainted Pokemon are released. Full Nuzlocke rules active.                                     |
 
-* Early Access to Power: High-tier Pokemon and legendaries available throughout
+Marks 1–3 represent the intended experience for the target audience. Marks 4–5 are for veterans seeking pressure. Mark 6 is the true souls-equivalent — brutal, self-imposed, unforgiving.
 
-## **Target Audience**
+## Mark-Tiered Trainer Teams
 
-Experienced Pokemon players seeking challenge and replayability. Players who enjoy:
+Major trainers (gym leaders, rivals, Elite Four) have three authored team tiers selected by the player's active mark level. This is implemented as a simple conditional check against the mark bitmask — one flag read per trainer encounter, no randomness required.
 
-* Soulsborne games (Dark Souls, Elden Ring)
+- **Low tier** (mark 0–2): Tough but fair. Type-focused, competitive movesets, no legendaries.
+- **Mid tier** (mark 3–4): Full competitive sun/rain/trick room strategies, coverage moves, some legendaries on ace slots.
+- **High tier** (mark 5–6): Optimised OU/Uber teams. Legendaries throughout. Designed to punish.
 
-* Competitive Pokemon formats
+Example — Flannery:
+- Low: Competitive sun team, Torkoal with SolarBeam, Arcanine, Ninetales, etc.
+- Mid: Drought setter, mixed offensive threats, Entei as ace.
+- High: Choice Specs Reshiram. She wants you dead.
 
-* Roguelike elements and procedural generation
+The design effort lives in the team spreadsheet, not the codebase. Three tiers across ~10 major trainers = ~30 authored teams total.
 
-* Nuzlocke challenges
+---
 
-* Strategic team building and optimization
+# 3. The Relic System
 
-# **2\. The Curse System**
+## Overview
 
-## **Overview**
+RELICS are what are previously known as curses! This is a very important terminology change.
 
-The Curse System is the signature mechanic that drives replayability. Each new game generates a unique combination of Banes (debuffs) and Boons (buffs) based on the player's Trainer ID, creating dramatically different playthroughs.
+Relics are the primary in-run progression mechanic, directly inspired by Balatro's joker economy. The Pokemon are your deck. Relics are your jokers. You hold up to 5 simultaneously across dedicated slots, acquiring and refining them across the run's natural milestones.
 
-## **Activation Flow**
+There is no separate boon/bane distinction. All relics exist in a single pool. Some are straightforwardly positive, some are mixed with meaningful upsides and genuine downsides, and some are run-defining wildcards. Rarity communicates valence at a glance.
 
-* Player encounters mysterious 'Curse Keeper' NPC before receiving first Pokemon
+## Rarity Tiers
 
-* Keeper presents 3 randomly-generated Bane/Boon sets based on Trainer ID seed
+**Common (10 relics):** Simple, numerical, immediately readable. Mostly positive with minor costs. The backbone of most runs. Good for early acquisition and players who want predictability.
 
-* Player can mulligan/reroll 2-3 times before committing
+**Uncommon (4 relics):** Unique combo effects that interact with game systems in non-obvious ways. Mixed valence — real upside, real downside baked into the same effect. The interesting design space.
 
-* Advanced: Manual seed input for deterministic runs (speedrun routing)
+**Rare (3–4 relics):** Run-defining, potentially broken, high variance. Things people screenshot and share. Each one fundamentally changes how you approach the game.
 
-## **Core Mechanics**
+A tier 3 common is roughly equivalent in power to a tier 1 uncommon, and a tier 3 uncommon roughly equivalent to a tier 1 rare. This creates a natural balance curve without deliberate tuning.
 
-Pool Structure:
+## Relic Tiers (Scaling)
 
-* 50 unique Banes (debuffs/constraints)
+Every relic has 3 tiers of potency — ideally simple numerical scaling on the same underlying effect. Upgrading increments the tier value in the save struct. Implementation is a lookup table per relic; no new battle hooks required beyond those already written for the base effect.
 
-* 50 unique Boons (powerful buffs)
+Example — *Adaptability* (common): Tier 1: +10% damage for STAB moves. Tier 2: +20%. Tier 3: +30%.
 
-* Each playthrough: 3 Banes \+ 3 Boons
+## Acquisition Cadence
 
-* All effects persist entire playthrough unless removed
+**Start of game:** Draw 3 relic from the weighted pool, pick 1. This is your identity relic — it should immediately suggest a direction for the run. Draw weighting: 80% common, 15% uncommon, 5% rare.
 
-Modification System:
+**Milestone schedule across 8 gyms:**
 
-* Curse Shop: Voluntarily add Banes for rewards (TMs, rare items)
+| Milestone           | Event                                                   |
+| ------------------- | ------------------------------------------------------- |
+| Gym 1 — Roxanne     | Receive relic, fills slot 2. Passive acquisition.       |
+| Gym 2 — Brawly      | Receive relic, fills slot 3. Passive acquisition.       |
+| Gym 3 — Wattson     | **Wager opportunity.** First meaningful decision point. |
+| Gym 4 — Flannery    | Receive relic, fills slot 4. Passive acquisition.       |
+| Gym 5 — Norman      | **Wager opportunity.** Mid-run refinement begins.       |
+| Gym 6 — Winona      | Receive relic, fills slot 5. All slots now full.        |
+| Gym 7 — Tate & Liza | **Wager opportunity.**                                  |
+| Gym 8 — Wallace     | **Wager opportunity.**                                  |
+| Elite Four          | **Final wager.** Highest rarity weighting on draws.     |
 
-* Legacy Dungeons: Complete to remove 1 chosen Bane
+Passive acquisition draws are weighted 80/15/5. The first half of the run is accumulation. The second half is optimisation. This mirrors how Pokemon team-building naturally feels as your composition crystallises.
 
-* Wagering: Add 1 Bane to receive 1 additional random Boon
+## The Wager Mechanic
 
-* Pure RNG: No intentional synergies between Banes/Boons
+At wager milestones, two options are available — or take nothing and move on unchanged.
 
-## **Example Banes (30+ more in full pool)**
+**Trade up:** Sacrifice one held relic, receive a random relic of guaranteed higher rarity at tier 1. You are gambling known value for unknown potential. A tier 3 common you've built around versus a tier 1 rare with untested synergy. This is the core tension.
 
-* Frail Constitution: Max HP \-20% for all Pokemon
+**Upgrade:** Increment one held relic from its current tier to the next. No new relic, no new risk — pure deepening of an existing commitment. Not available if the relic is already at tier 3.
 
-* Arcane Weakness: Super-effective moves deal 1.5x instead of 2x
+Taking nothing is always valid and never penalised. Sometimes your build is working and you leave it alone.
 
-* Poverty: All shop prices doubled
+## Save Structure
 
-* Unstable Evolution: Evolution stones required for trade evolutions, evolutions delayed 5 levels
+```c
+// Per slot: relic identity + current tier
+u8 curse_slot_id[5];    // index into curse pool
+u8 curse_slot_tier[5];  // 0-2, maps to tier 1-3
+u8 active_marks;       // bitmask, marks 1-6
+```
 
-* Type Lock: Cannot use \[randomly selected type\] in battles
+Relic effects resolve via lookup: `relic_effects[id][tier]` returns the relevant multiplier or flag. Battle hooks read these at calculation time.
 
-* Momentum Loss: Pivot moves (U-turn, Volt Switch) deal half damage
+## Relic Pool (To Be Fully Designed)
 
-* Sluggish Reflexes: Accuracy multiplied by 0.95
+The target pool is approximately 10 common, 4 uncommon, 3–4 rare. Every entry should feel handcrafted. Examples:
 
-* Slow Learner: Experience gain multiplied by 0.8
+**Common (simple, global ability effects):**
+- *Hustle:* +Atk%, -Accuracy%
+- *Adaptability:* Increased STAB multiplier
+- *Swift Swim / Chlorophyll / Sand Rush:* Speed boost in relevant weather
+- *Thick Fat:* Reduced damage from Fire/Ice
+- *Quick Learner:* +EXP% gain
+- *Critical Fortune:* +Critical hit rate
 
-* Brittle Items: Held items have 20% chance to break after battle
+**Uncommon (complex, mixed valence):**
+- *Glass Cannon:* +30% all damage dealt, -30% all HP
+- *Momentum:* First move each battle gets +1 priority, all subsequent moves lose 1 priority
+- *Blood Price:* Winning a battle restores HP to full; losing a battle costs money equal to prize money
 
-* Curse of Binding: Cannot switch Pokemon during battle
+**Rare (run-defining, potentially broken):**
+- *Speed Demon:* +1 priority on all attacking moves
+- *Cursed Inheritance:* When a Pokemon faints, the next Pokemon out inherits all its stat boosts
 
-* Weather Vulnerability: Take 1/16 HP damage per turn in weather
+---
 
-* Shaky Hands: Critical hit ratio reduced by 50%
+# 4. Battle & Difficulty Design
 
-* Limited Reserves: Can only carry 4 Pokemon (2 slots locked)
+## Design Philosophy
 
-* Type Deficiency: One randomly selected type deals \-20% damage
+Difficulty does not equal grinding. Battles should be strategically challenging, fair and telegraphed, rewarding of player knowledge, and respectful of player time.
 
-* Stat Curse: One stat (Atk/Def/SpA/SpD/Spe) reduced by 15% across all Pokemon
-
-## **Example Boons (30+ more in full pool)**
-
-* Ancient Bloodline: Start with random pseudo-legendary egg
-
-* Draconic Heritage: Start with guaranteed Dragon-type legendary/pseudo
-
-* Fey Ancestry: Start with guaranteed Fairy-type legendary
-
-* Mystic Sight: See opponent's moves/ability before battle
-
-* Quick Learner: \+50% EXP gain
-
-* Weather Attunement: Your weather effects last 2 extra turns
-
-* Critical Fortune: \+10% critical hit rate on all moves
-
-* Type Mastery: One randomly selected type deals \+20% damage
-
-* Treasure Hunter: 2x item find rate from trainers/wild Pokemon
-
-* Battle Hardened: All Pokemon gain \+10% to all stats
-
-* Speed Demon: \+1 priority to all attacking moves
-
-* Tank Blessing: \+30% HP for all Pokemon
-
-* Elemental Affinity: Immune to one randomly selected type
-
-* Lucky Charm: Shiny encounter rate 4x higher
-
-* Instant Mastery: Start with 5 random competitive TMs
-
-## **Technical Implementation Notes**
-
-Configuration Approach:
-
-* Use flag system in save data to track active Banes/Boons
-
-* Curse Keeper NPC uses script to generate seed-based selection
-
-* Battle engine hooks to apply multipliers/modifications
-
-* UI display shows active Curses on Trainer Card/Status screen
-
-Seed Generation:
-
-* Trainer ID → Hash function → Deterministic Bane/Boon indices
-
-* Store active curse indices in save file for persistence
-
-* Manual seed input stores custom hash value
-
-# **3\. Battle & Difficulty Design**
-
-## **Design Philosophy**
-
-Difficulty does not equal grinding. Battles should be:
-
-* Strategically challenging (team composition, move selection)
-
-* Fair and telegraphed (no unfair RNG, clear type matchups)
-
-* Rewarding player knowledge (competitive mechanics, coverage)
-
-* Respectful of player time (no forced grinding, instant team building)
-
-## **Level Curve**
+## Level Curve
 
 | Milestone | Level Range | Notes |
-| :---- | :---- | :---- |
-| Gym 1 (Roxanne) | 12-14 | Full team available |
-| Gym 2 (Brawly) | 18-20 |  |
-| Gym 3 (Wattson) | 24-26 | Skill check/wall |
-| Gym 4 (Flannery) | 32-34 |  |
-| Gym 5 (Norman) | 40-42 | Major difficulty spike |
-| Gym 6 (Winona) | 46-48 |  |
-| Gym 7 (Tate & Liza) | 52-54 |  |
-| Gym 8 (Wallace) | 58-60 |  |
-| Elite Four | 72-75 | Champion at 76-78 |
-| E4 Rematch | 95-100 | Full legendary/OU teams |
+|-----------|-------------|-------|
+| Gym 1 (Roxanne) | 12–14 | Full team available from start |
+| Gym 2 (Brawly) | 18–20 | |
+| Gym 3 (Wattson) | 24–26 | Skill check / first wall |
+| Gym 4 (Flannery) | 32–34 | |
+| Gym 5 (Norman) | 40–42 | Major difficulty spike |
+| Gym 6 (Winona) | 46–48 | |
+| Gym 7 (Tate & Liza) | 52–54 | |
+| Gym 8 (Wallace) | 58–60 | |
+| Elite Four | 72–75 | Champion at 76–78 |
+| E4 Rematch | 95–100 | Full legendary/OU teams |
 
-## **Trainer AI & Teams**
+## Authored Setpiece Battles
 
-Major Battles (Gym Leaders, Elite Four, Rivals):
+A small number of battles receive extra design attention to be genuine Ornstein and Smough moments — encounters so well designed that players talk about them specifically. Candidates: Norman (already has a reputation), Tate & Liza (double battle format is inherently brutal), Sidney (redesigned to be a genuine wall). Everything else is competent and challenging without needing to be legendary. 
 
-* Full 6-Pokemon teams from Gym 2+ onwards
+## Battle Restrictions
 
-* Competitive-grade: Proper EVs, optimal natures, held items
+Bag healing items (Potions, Revives) banned during all trainer battles (baseline mark 1 effect). Full heal available between battles via Pokemon Centers. Pokeballs always allowed in wild encounters. X-Items allowed for tactical use. NPCs follow the same restrictions for mutual fairness.
 
-* Coverage moves to counter weaknesses (e.g., Flannery's Torkoal with SolarBeam)
+Held items fully available and encouraged. Competitive items prioritised (Life Orb, Choice items, Assault Vest, Sitrus Berry, etc.).
 
-* Strategic AI: Switches on bad matchups, uses setup moves intelligently
+## Intentionally Powerful Tools
 
-* Gym 3+ can include legendaries (e.g., Flannery with Entei, Winona with Articuno)
+Players have access to powerful strategies. Setup sweepers (Shell Smash, Dragon Dance, Quiver Dance) readily available. High-tier Pokemon including pseudo-legendaries available throughout. All Pokemon have access to their competitive movesets. NPCs at higher marks tiers have the same tools — fairness operates in both directions.
 
-Regular Trainers:
+---
 
-* Scale with location and story progression
+# 5. Pokemon Availability & Encounters
 
-* 2-4 Pokemon teams with some held items
+## Generation Scope
 
-* Improved movesets (no Tackle spam)
+Generations 1–9 fully implemented (Kanto through Alola) via pokeemerald-expansion. Regional forms included. Expanded move pools across all generations.
 
-## **Boss Rematches**
+## Starter Selection
 
-* Fixed high-level challenges (not level-scaled)
+At marks 0–4, player selects from the standard three Hoenn starters. At mark 5 (*Cursed Blood*), starter is randomly assigned from the full multi-generational starter pool, determined at the new game screen and revealed only when received from Birch.
 
-* Available immediately after unlocking
+## Wild Encounter System
 
-* Can be attempted at any level (Elden Ring's Tree Sentinel approach)
+Encounter tables use a hybrid slot model: 8 fixed slots per route (curated for type and level diversity) and 2 seed-influenced slots (determined by Trainer ID hash, unique per run). This provides meaningful team-building variance across runs without full randomisation.
 
-* Elite Four rematch at level 95-100 with top-tier OU/Uber teams
+Early routes (101–103) have expanded encounter pools with genuine type diversity from the start — no Zigzagoon/Wurmple spam. Rare slots include pseudo-legendaries (e.g., Bagon on Route 115).
 
-## **Battle Restrictions**
+## Shiny Odds
 
-Item Usage:
+Adjustable via Options menu. Default: 1/512. *Critical Fortune* relic at tier 3 can include a shiny rate bonus. Accessibility for shiny hunters without compromising challenge.
 
-* Bag healing items (Potions, Revives) BANNED during trainer battles
+---
 
-* Full heal available between battles (mini Pokemon Center concept)
+# 6. Legacy Dungeons
 
-* Pokeballs always allowed (wild encounters)
+## Overview
 
-* X-Items (stat boosters) allowed for tactical use
+Three optional dungeons built on expanded versions of existing Emerald maps. Not required for main story progression. Accessible early but scale in difficulty. Reward: rare legendary Pokemon encounter. No Bane removal mechanic — the mark and relic systems handle all progression rewards.
 
-* NPCs follow same restrictions (mutual fairness)
+## Dungeon 1: The Forgotten Vault (New Mauville)
 
-Held Items:
+Recommended level 30–35. Electric/Steel type focus. Expanded maze layout with power grid puzzle. Boss reward: choice of Raikou, Zapdos, or Thundurus encounter.
 
-* All held items available and encouraged
+## Dungeon 2: The Tidal Abyss (Shoal Cave)
 
-* Healing berries (Sitrus, Oran) remain powerful
+Recommended level 50–55. Water/Ice type focus. Tide-cycle mechanic opens different paths. Boss reward: choice of Suicune, Kyurem, or Lugia encounter.
 
-* Competitive items prioritized (Life Orb, Choice items, Assault Vest, etc.)
+## Dungeon 3: The Labyrinth of Echoes (Granite Cave)
 
-## **Intentionally Powerful Tools**
+Recommended level 65–70. Multi-floor structure, mixed types, boss trainers every 3 floors. Cannot leave mid-run. Boss reward: player choice of any non-Gen3 box legendary.
 
-Players have access to 'broken' strategies:
+---
 
-* Setup sweepers: Shell Smash, Dragon Dance, Quiver Dance readily available
+# 7. Quality of Life Features
 
-* High-tier Pokemon: Pseudo-legendaries, legendaries available early
+| Feature | Description                                   | Priority |
+|---------|-------------|----------|
+| Physical/Special Split | Gen 4+ move categorisation                    | P0 |
+| Infinite TMs | All TMs reusable                              | P0 |
+| Infinite Rare Candies | Available early for instant levelling         | P0 |
+| HM Removal | No field move requirements                    | P0 |
+| Toggleable EXP Share | Modern always-on style, can be disabled       | P0 |
+| Move Relearner Free | Free, available from Fallarbor                | P0 |
+| Move Deleter Early | Available from Gym 1                          | P0 |
+| Evolution Stones | Purchasable at all Poke Marts                 | P0 |
+| EV Training Items | Power items early, vitamins remove EV cap     | P0 |
+| Fast Battle Text | Instant text option in settings               | P1 |
+| Running Indoors | Run everywhere                                | P1 |
+| Quick PC Access | Portable PC key item                          | P1 |
+| Visible IVs/EVs | Display in summary screen                     | P1 |
+| Name Rater | Rename Pokemon anytime                        | P1 |
+| Perma-Death Option | Nuzlocke mode (also activated by mark 6)      | P1 |
+| Nature Mints | Change nature post-catch (expensive)          | P2 |
+| Ability Capsule | Change ability (expensive)                    | P2 |
+| Breeding QoL | Faster eggs, guaranteed gender/nature options | P2 |
 
-* Competitive movesets: All Pokemon get their best moves
+P0 = Critical. P1 = High priority. P2 = Nice to have.
 
-* NPCs have the same tools: Fairness in both directions
+---
 
-# **4\. Pokemon Availability & Encounters**
+# 8. Postgame Content
 
-## **Generation Scope**
+## Elite Four Rematch
 
-* Generations 1-7 fully implemented (Kanto through Alola)
+Level 95–100 teams. Full legendary/OU competitive sets. Perfect IVs, optimal EVs. Steven's team includes box legendaries. Uses high-mark tier authored teams regardless of player's mark selection.
 
-* Gen 8-9 stretch goal for future updates
+## Superboss House
 
-* Regional forms included (Alolan variants)
+NPC house with 10+ developer/playtester trainers. Each has a unique themed team (Monotype, Weather, Trick Room, etc.). Level 100, fully optimised. Rewards: Master Balls, Rare Candies, competitive items. One NPC equivalent to Red — the ultimate challenge.
 
-* Expanded move pools with all generations' moves
+## Battle Frontier
 
-## **Starter Selection**
+Existing Battle Frontier preserved with updated AI using competitive strategies. Low priority — not a focus area for v1.
 
-* Randomly determined by Curse seed (not player choice)
+## The Sealed Chamber *(Stretch Goal)*
 
-* Bloodline Boons override: Draconic gives Dragon starter, Fey gives Fairy, etc.
+Postgame-exclusive 50+ floor roguelike dungeon. Requires completion of all three Legacy Dungeons to unlock. Boss encounters every 10 floors. Final floor: Arceus at level 100.
 
-* Example pool: All generation starters \+ select other Pokemon
+---
 
-## **Wild Encounter System**
+# 9. Technical Implementation
 
-Hybrid Encounter Tables:
+## Base Framework
 
-* 80% slots: Standardized encounters (curated for type/level diversity)
+pokeemerald-expansion (pret/pokeemerald-expansion). Provides Physical/Special split, Fairy type, Gen 1–9 Pokemon, modern moves, proven stability, active community documentation.
 
-* 20% slots: Seed-determined encounters (unique to each player's Curse)
+## Relic System
 
-* Implementation: Each route has 10 slots; 8 fixed, 2 procedural
+(previously known as curses)
 
-Early Route Improvements:
+```c
+u8 curse_slot_id[5];    // index into relic pool (0-255)
+u8 curse_slot_tier[5];  // 0-2, tier 1-3
+u8 active_marks;       // bitmask for marks 1-6
+```
 
-* Route 101-103: 15+ possible encounters (no more Zigzagoon/Wurmple spam)
+Effects resolve via `curse_effects[id][tier]` lookup table. Battle hooks read this at damage calculation, EXP gain, accuracy calculation, and shop price points. UI displays active relics.
 
-* Type diversity from the start (Water, Fire, Grass, Electric, Fighting all available early)
+## Mark-Tiered Trainer Teams
 
-* Rare encounters include pseudo-legendaries (e.g., Bagon on Route 115\)
+Trainer team selection reads `active_marks` bitmask at battle start. Three team arrays per major trainer: `trainer_teams_low[id]`, `trainer_teams_mid[id]`, `trainer_teams_high[id]`. Selection: low for marks 0–2, mid for 3–4, high for 5–6. Minimal runtime overhead, all complexity in data.
 
-## **Legendary Availability**
+## Seeded Encounters
 
-Story Legendaries:
+Trainer ID hashed to generate deterministic indices for the 2 seed-influenced encounter slots per route. Seed-influenced slots pull from a tier-appropriate species pool. Hash stored in save file; manual seed input supported for deterministic runs and speedrun routing.
 
-* Groudon/Kyogre/Rayquaza remain story-locked (preserve Emerald narrative)
+## Legacy Dungeons
 
-* Lati@s events unchanged
+Expand existing map data. Add connection tiles to new sections. Legendary encounters use standard wild battle system triggered by NPC script after boss defeat. No Bane removal logic required — dungeons reward Pokemon only.
 
-Other Legendaries:
+## AI Improvements
 
-* Integrated into gym leader teams from Gym 3+ onwards
+Modify AI evaluation functions to prioritise setup moves. Implement switch logic for bad type matchups. Improve coverage move selection. Reference: Radical Red AI implementation.
 
-* Catchable in Legacy Dungeons as rewards
+---
 
-* Some available as rare wild encounters in postgame areas
+# 10. Design Guidelines & Philosophy
 
-* Elite Four rematch teams include box legendaries
+## Guiding Principles
 
-## **Shiny Odds**
+**Respect Player Time.** No forced grinding. Rare Candies available immediately. Fast iteration via infinite TMs and easy team building.
 
-* Adjustable via in-game setting (Options menu)
+**Difficulty Through Depth.** Strategic challenge via type coverage, team composition, and move selection. Understanding competitive mechanics gives a genuine advantage. No bloated HP pools, no evasion spam.
 
-* Default: 1/512 (increased from vanilla 1/8192)
+**Replayability Through Variance, Not Volume.** A small, well-designed relic pool with mark-tiered authored opponents creates more meaningful runs than a large shallow pool. Every cursor entry should feel handcrafted and worth reading.
 
-* Lucky Charm Boon: 1/128
+**Fair but Punishing.** Players have access to the same tools as NPCs. Challenges are telegraphed. Optional difficulty systems (marks, Legacy Dungeons) are always player-authored.
 
-* Accessibility for shiny hunters without compromising challenge
+## What to Avoid
 
-# **5\. Legacy Dungeons**
+- Forced backtracking or HM gatekeeping
+- Unclear objectives or cryptic puzzles
+- Unavoidable damage or unfair RNG
+- Artificially restricting player options
+- Excessive story changes that alter Emerald's feel
+- Scope creep on systems before core loop is stable
 
-## **Overview**
+## Balance Philosophy
 
-Three major optional dungeons inspired by Elden Ring's Legacy Dungeons and classic cRPG dungeon crawls. These are sprawling, challenging areas with unique encounters and substantial rewards.
+Relics should create interesting playstyles, not unfun restrictions. Common relics should feel impactful at tier 3. Rare relics should feel occasionally broken — that's the point. Marks should feel like a meaningful contract, not a punishment. The difficulty arc: early game teaches mechanics, mid game tests knowledge, late game expects mastery, postgame is for masochists.
 
-## **Design Principles**
+---
 
-* Optional side content (not required for main story)
+# Appendices
 
-* Accessible early but scale in difficulty
+## Appendix A: Recommended Testing Tools
 
-* Focus on expanded layouts and encounters (GBA technical feasibility)
+- mGBA with debug features
+- PoryMap for map editing
+- Encounter table spreadsheet for balance tracking
+- Pokemon Showdown damage calculator for competitive balance
+- Community playtester Discord for feedback
 
-* No story/event scripting changes (minimize romhacking complexity)
+## Appendix B: Resources & References
 
-* Unique encounter tables with cross-gen legendaries
+- pokeemerald-expansion: https://github.com/rh-hideout/pokeemerald-expansion
+- Radical Red AI implementation
+- Balatro joker design philosophy
+- Elden Ring Legacy Dungeon design
+- Smogon competitive tier lists
 
-## **Dungeon 1: The Forgotten Vault (New Mauville)**
+---
 
-Location: New Mauville (expanded interior)
+# Conclusion
 
-Recommended Level: 30-35
+Pokemon Emerald Herald is a romhack that earns its replayability through tight systemic design rather than content volume. The Mark system gives players a honest difficulty contract before a run begins. The Relic system gives them a joker-economy progression loop that rewards both bold gambling and patient optimisation. Authored competitive trainer teams — tiered by marks — provide the handcrafted Ornstein and Smough moments that make overcoming a significant adversary feel earned.
 
-Theme: Abandoned electrical facility with maze-like corridors
+The Pokemon are your deck. The relics are your jokers. The marks are how much you're willing to lose.
 
-Unique Mechanic: Power grid puzzle \- activate generators to unlock areas
-
-Encounters:
-
-* Electric/Steel type focus
-
-* Rotating trainers with competitive Electric teams
-
-* Wild encounters: Rotom forms, Magnezone line, Electivire, etc.
-
-Rewards:
-
-* Boss: Legendary encounter (Raikou, Zapdos, or Thundurus)
-
-* Remove 1 chosen Bane
-
-* TM: Thunder
-
-* Item: Magnet
-
-## **Dungeon 2: The Tidal Abyss (Shoal Cave)**
-
-Location: Shoal Cave (significantly expanded)
-
-Recommended Level: 50-55
-
-Theme: Tide-based dungeon with accessible and flooded sections
-
-Unique Mechanic: Tide cycles open different paths (time-based or script trigger)
-
-Encounters:
-
-* Water/Ice type focus
-
-* High-level swimmers and deep-sea trainers
-
-* Wild encounters: Legendary beasts (Suicune), Fossil Pokemon, Kyurem
-
-Rewards:
-
-* Boss: Choice of Suicune, Kyurem, or Lugia
-
-* Remove 1 chosen Bane
-
-* TM: Hydro Pump
-
-* Item: Never-Melt Ice
-
-## **Dungeon 3: The Labyrinth of Echoes (Granite Cave)**
-
-Location: Granite Cave (massive expansion, multiple floors)
-
-Recommended Level: 65-70
-
-Theme: Multi-floor roguelike dungeon with randomized elements
-
-Unique Mechanic: Mini-roguelike \- random encounters each floor, cannot leave mid-run
-
-Encounters:
-
-* Mixed types, competitive-tier trainers
-
-* Boss trainers every 3 floors
-
-* Wild encounters: All non-Gen3 box legendaries (Dialga, Palkia, Giratina, etc.)
-
-Rewards:
-
-* Boss: Player choice of any non-Gen3 box legendary
-
-* Remove 1 chosen Bane
-
-* TM: Choice of powerful move (Draco Meteor, Earth Power, etc.)
-
-* Item: Master Ball
-
-## **Technical Considerations**
-
-* Expand existing maps rather than create new ones (reduce scripting)
-
-* Reuse trainer classes with modified teams
-
-* Legendary encounters use standard wild battle system
-
-* Bane removal via NPC dialogue after boss defeat
-
-# **6\. Quality of Life Features**
-
-## **Overview**
-
-Extensive QoL improvements to respect player time and enable experimentation. The motto: Difficulty through strategy, not tedium.
-
-| Feature | Description | Priority |
-| :---- | :---- | ----- |
-| **Physical/Special Split** | Gen 4+ move categorization implemented | **P0** |
-| **Infinite TMs** | All TMs reusable | **P0** |
-| **Infinite Rare Candies** | Available early for instant leveling | **P0** |
-| **HM Removal** | No field move requirements \- all Water types Surf, Flying types Fly, etc. | **P0** |
-| **Toggleable EXP Share** | Modern always-on style, can be disabled | **P0** |
-| **Reusable Items** | Key items never consumed | **P0** |
-| **Fast Battle Text** | Instant text option in settings | **P1** |
-| **Running Indoors** | Run everywhere | **P1** |
-| **Quick PC Access** | Portable PC key item | **P1** |
-| **Move Relearner Free** | Free and available early (Fallarbor) | **P0** |
-| **Move Deleter Early** | Available from Gym 1 | **P0** |
-| **Name Rater Available** | Rename Pokemon anytime | **P1** |
-| **Evolution Stones Accessible** | Purchasable at all Poke Marts | **P0** |
-| **Breeding QoL** | Eggs hatch faster, guaranteed gender/nature options | **P2** |
-| **Visible IVs/EVs** | Display in summary screen | **P1** |
-| **EV Training Items** | Power items available early, vitamins remove EV limit | **P0** |
-| **Nature Mints** | Change nature post-catch (expensive) | **P2** |
-| **Ability Capsule** | Change ability (expensive) | **P2** |
-| **Perma-Death Option** | Nuzlocke mode \- fainted Pokemon auto-released | **P1** |
-
-## **Implementation Priority**
-
-P0 \= Critical (core experience)
-
-P1 \= High Priority (significant QoL)
-
-P2 \= Nice to Have (polish/stretch goals)
-
-# **7\. Postgame Content**
-
-## **Elite Four Rematch**
-
-* Level 95-100 teams
-
-* Full legendary/OU competitive teams
-
-* Perfect IVs, optimal EVs, competitive movesets
-
-* Steven's team includes box legendaries (Dialga, etc.)
-
-## **Battle Frontier**
-
-* Keep existing Battle Frontier functionality
-
-* Update AI to use competitive strategies
-
-* Low priority \- not a focus area
-
-## **Superboss House**
-
-Inspired by Pokemon Emerald Kaizo/Imperium:
-
-* NPC house with 10+ developer/playtester trainers
-
-* Each has a unique themed team (Monotype, Weather, Trick Room, etc.)
-
-* Level 100, fully optimized teams
-
-* Rewards: Master Balls, Rare Candies, competitive items
-
-* One NPC equivalent to 'Red' \- ultimate challenge fight
-
-## **The Sealed Chamber (Stretch Goal)**
-
-Postgame-exclusive dungeon:
-
-* Multi-floor challenge dungeon (50+ floors)
-
-* Roguelike elements: random encounters, escalating difficulty
-
-* Boss encounters every 10 floors
-
-* Final floor: Arceus encounter at Level 100
-
-* Requires completion of all 3 Legacy Dungeons to unlock
-
-# **8\. Technical Implementation**
-
-## **Base Framework**
-
-* Pokemon Emerald Expansion (pret/pokeemerald-expansion)
-
-* Provides: Physical/Special split, Fairy type, Gen 1-9 Pokemon, modern moves
-
-* Benefits: Proven stable, extensive documentation, active community
-
-## **Curse System Implementation**
-
-Data Structure:
-
-* Save file stores: Active Bane indices (3), Active Boon indices (3), Seed value
-
-* Flag array: CURSE\_BANE\_1, CURSE\_BANE\_2, CURSE\_BANE\_3, CURSE\_BOON\_1, etc.
-
-Battle Hooks:
-
-* Modify damage calculation for multipliers (Frail Constitution, Type Mastery)
-
-* Hook experience gain for Quick Learner/Slow Learner
-
-* Hook shop prices for Poverty
-
-* Hook accuracy calculation for Sluggish Reflexes
-
-UI Display:
-
-* New Trainer Card screen showing active Curses
-
-* Party menu overlay for active buffs/debuffs
-
-## **Seeded Encounters**
-
-* Hash Trainer ID to generate deterministic species indices
-
-* Route encounter tables: 8 fixed slots \+ 2 seeded slots
-
-* Seeded slots pull from tier-appropriate species pool
-
-* Bane/Boon modifiers can further filter/boost seed pool
-
-## **Legacy Dungeons**
-
-* Expand existing map data (New Mauville, Shoal Cave, Granite Cave)
-
-* Add connection tiles to new sections
-
-* Populate with trainers using existing trainer classes
-
-* Boss encounters: NPC script triggers wild legendary battle
-
-* Bane removal: Post-battle NPC dialogue sets flag, removes curse
-
-## **AI Improvements**
-
-* Modify AI evaluation functions to prioritize setup moves
-
-* Implement switch logic for bad type matchups
-
-* Improve move selection for coverage
-
-* Reference: Radical Red's AI improvements
-
-## **Testing & Balance**
-
-Playtesting Focus Areas:
-
-* Curse balance: Are any Banes/Boons game-breaking?
-
-* Level curve: Can player progress without grinding?
-
-* Difficulty spikes: Are walls fair and telegraphed?
-
-* Seed variety: Do different seeds feel meaningfully different?
-
-Metrics to Track:
-
-* Average clear time for each gym
-
-* Most/least used Pokemon
-
-* Most/least rerolled Banes/Boons
-
-* Legacy Dungeon completion rates
-
-# **9\. Development Roadmap**
-
-## **Phase 1: Foundation (Weeks 1-4)**
-
-* Set up pokeemerald-expansion environment
-
-* Implement basic Curse System data structures
-
-* Create Curse Keeper NPC and selection UI
-
-* Implement 10 Banes and 10 Boons (prototype pool)
-
-* Test seed generation and persistence
-
-## **Phase 2: QoL & Encounters (Weeks 5-8)**
-
-* Implement all P0 QoL features
-
-* Expand Bane/Boon pools to 30 each
-
-* Create seeded encounter system
-
-* Revise early route encounter tables
-
-* Add infinite Rare Candies and evolution stones
-
-## **Phase 3: Trainer Teams (Weeks 9-12)**
-
-* Update all gym leader teams to level 6 Pokemon
-
-* Add competitive movesets, items, EVs to major battles
-
-* Improve AI for gym leaders and Elite Four
-
-* Adjust level curve and difficulty
-
-* Implement item usage restrictions
-
-## **Phase 4: Legacy Dungeons (Weeks 13-16)**
-
-* Design and implement Dungeon 1 (New Mauville)
-
-* Design and implement Dungeon 2 (Shoal Cave)
-
-* Design and implement Dungeon 3 (Granite Cave)
-
-* Add legendary encounters and Bane removal rewards
-
-* Populate with trainers and unique encounters
-
-## **Phase 5: Polish & Balance (Weeks 17-20)**
-
-* Complete Bane/Boon pools (50 each)
-
-* Implement Curse Shop NPC
-
-* Add Elite Four rematch teams
-
-* Extensive playtesting and balance adjustments
-
-* Implement P1 QoL features
-
-## **Phase 6: Postgame & Release (Weeks 21-24)**
-
-* Implement Superboss House
-
-* Polish Battle Frontier integration
-
-* Final balance pass on all major battles
-
-* Documentation and player guide
-
-* Public release and community feedback
-
-## **Post-Release: Updates & Stretch Goals**
-
-* The Sealed Chamber dungeon (if feasible)
-
-* Expand to Gen 8-9 Pokemon
-
-* Additional Banes/Boons based on feedback
-
-* Community-requested features
-
-* Bug fixes and balance patches
-
-# **10\. Design Guidelines & Philosophy**
-
-## **Guiding Principles**
-
-### **Respect Player Time**
-
-* No forced grinding: Rare Candies available immediately
-
-* No RNG frustration: Good shiny odds, no item breakage without Bane
-
-* Fast iteration: Infinite TMs, easy team building
-
-### **Difficulty Through Depth**
-
-* Strategic challenge: Type coverage, team composition, move selection
-
-* Knowledge rewards: Understanding competitive mechanics gives advantage
-
-* No artificial inflation: No bloated HP pools, no evasion spam
-
-### **Replayability First**
-
-* Curse System ensures every run feels different
-
-* Seeded encounters create unique team compositions
-
-* Multiple viable strategies for each challenge
-
-### **Fair but Punishing**
-
-* Players have access to the same tools as NPCs
-
-* Telegraphed challenges: Type specialists use their type well
-
-* Optional difficulty: Legacy Dungeons and Curses are player choice
-
-## **What to Avoid**
-
-* Forced backtracking or excessive HM usage
-
-* Unclear objectives or cryptic puzzles
-
-* Unavoidable damage or unfair RNG
-
-* Artificially restricting player options
-
-* Excessive story changes that alter Emerald's feel
-
-## **Balance Philosophy**
-
-Bane/Boon Design:
-
-* Banes should create interesting constraints, not unfun restrictions
-
-* Boons should feel powerful but not trivialize entire game
-
-* Aim for 'meaningful impact' not 'complete invalidation'
-
-Difficulty Curve:
-
-* Early game: Accessible, teach mechanics
-
-* Mid game: Introduce walls, test player knowledge
-
-* Late game: Expect player mastery, full competitive strategies
-
-* Postgame: Superboss-tier challenges for veteran players
-
-## **Community Feedback Integration**
-
-* Monitor difficulty spikes via community playthroughs
-
-* Track most/least popular Curses for balance
-
-* Be willing to nerf overperforming Boons or buff weak Banes
-
-* Maintain open communication about design decisions
-
-# **Appendices**
-
-## **Appendix A: Complete Bane Pool (50 Examples)**
-
-(Full implementation requires 50 unique Banes. Below are additional examples beyond the 15 listed earlier.)
-
-* Curse of Vulnerability: \+20% damage taken from all attacks
-
-* Restricted Arsenal: TMs cannot be used (only level-up moves)
-
-* Weakened Instincts: Cannot see wild Pokemon levels before encounter
-
-* Expensive Healing: Pokemon Center healing costs money
-
-* Fragile Equipment: Pokeballs have 50% catch rate reduction
-
-* ...and 30 more to be fully designed
-
-## **Appendix B: Complete Boon Pool (50 Examples)**
-
-(Full implementation requires 50 unique Boons. Below are additional examples beyond the 15 listed earlier.)
-
-* Item Mastery: Start with all evolution stones
-
-* Breeder's Touch: All eggs hatch with perfect IVs
-
-* Nature Control: Choose nature when catching any Pokemon
-
-* Sync Master: Synchronize works 100% of the time
-
-* Shiny Magnet: Shiny clause \- guaranteed shiny on each route
-
-* ...and 30 more to be fully designed
-
-## **Appendix C: Recommended Testing Tools**
-
-* mGBA emulator with debug features
-
-* PoryMap for map editing
-
-* Encounter table spreadsheet for balance tracking
-
-* Damage calculator for competitive balance
-
-* Community playtester Discord for feedback
-
-## **Appendix D: Resources & References**
-
-* pokeemerald-expansion GitHub: https://github.com/rh-hideout/pokeemerald-expansion
-
-* Radical Red design philosophy
-
-* Elden Ring Legacy Dungeon design principles
-
-* Pokemon Showdown damage calculator
-
-* Smogon competitive tier lists
-
-# **Conclusion**
-
-Pokemon Emerald: Bearer of the Curse aims to deliver a fresh, challenging, and endlessly replayable take on the classic Hoenn adventure. By combining Soulsborne difficulty philosophy, roguelike procedural generation, and respect for player time, this romhack creates a unique experience that rewards skill, knowledge, and experimentation.
-
-The Curse System ensures no two playthroughs are identical, while Legacy Dungeons provide optional challenges for players seeking the ultimate test. With competitive-grade battles, extensive QoL improvements, and a commitment to fairness, Bearer of the Curse respects both veterans and newcomers alike.
-
-This design bible serves as the definitive reference for development. As the project evolves, this document will be updated to reflect new features, balance changes, and community feedback.
-
-*May your Curses be light and your Boons be strong.*
+*May your curses be light and your boons be strong.*

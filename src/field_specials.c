@@ -4,7 +4,7 @@
 #include "battle.h"
 #include "battle_tower.h"
 #include "cable_club.h"
-#include "curse_menu.h"
+#include "relic_menu.h"
 #include "data.h"
 #include "decoration.h"
 #include "diploma.h"
@@ -167,14 +167,14 @@ void Special_ShowDiploma(void)
     LockPlayerFieldControls();
 }
 
-void Special_InitCurses(void)
+void Special_InitRelics(void)
 {
-    Curse_InitDefaults();
+    Relic_InitDefaults();
 }
 
-void Special_OpenCurseMenu(void)
+void Special_OpenRelicMenu(void)
 {
-    ShowCurseMenu(CB2_ReturnToFieldContinueScriptPlayMapMusic);
+    ShowRelicMenu(CB2_ReturnToFieldContinueScriptPlayMapMusic);
     LockPlayerFieldControls();
 }
 

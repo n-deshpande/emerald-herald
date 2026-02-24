@@ -27,42 +27,43 @@ class Effect:
 
 
 @dataclass
-class CurseDef:
+class RelicDef:
     symbol: str
     name: str | None
-    description: str | None
-    effects_name: str | None
-    effect_count_raw: str | None
+    rarity: str | None
+    descriptions: list[str | None]
+    effects_names: list[str | None]
+    effect_count_raws: list[str | None]
 
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def parse_curse_constants(path: Path) -> tuple[dict[str, int], int | None]:
+def parse_relic_constants(path: Path) -> tuple[dict[str, int], int | None]:
     text = read_text(path)
-    curse_ids: dict[str, int] = {}
-    curse_count: int | None = None
+    relic_ids: dict[str, int] = {}
+    relic_count: int | None = None
     for line in text.splitlines():
-        match = re.match(r"\s*#define\s+(CURSE_[A-Z0-9_]+)\s+(\d+)\b", line)
+        match = re.match(r"\s*#define\s+(RELIC_[A-Z0-9_]+)\s+(\d+)\b", line)
         if not match:
             continue
         name, value = match.group(1), int(match.group(2))
-        if name == "CURSE_COUNT":
-            curse_count = value
+        if name == "RELIC_COUNT":
+            relic_count = value
             break
         else:
-            curse_ids[name] = value
-    return curse_ids, curse_count
+            relic_ids[name] = value
+    return relic_ids, relic_count
 
 
 def _eval_multiplier(expr: str | None) -> float | None:
     if expr is None:
         return None
     expr = expr.strip()
-    match = re.fullmatch(r"CURSE_REDUCTION_PCT\((\d+(?:\.\d+)?)\)", expr)
+    match = re.fullmatch(r"RELIC_REDUCTION_PCT\((\d+(?:\.\d+)?)\)", expr)
     if match:
         return (100.0 - float(match.group(1))) / 100.0
-    match = re.fullmatch(r"CURSE_MULT_PCT\((\d+(?:\.\d+)?)\)", expr)
+    match = re.fullmatch(r"RELIC_MULT_PCT\((\d+(?:\.\d+)?)\)", expr)
     if match:
         return float(match.group(1)) / 100.0
     match = re.fullmatch(r"UQ_4_12\(([-\d\.]+)\)", expr)
@@ -75,7 +76,7 @@ def parse_effects_arrays(path: Path) -> dict[str, list[Effect]]:
     text = read_text(path)
     effects: dict[str, list[Effect]] = {}
     pattern = re.compile(
-        r"static\s+const\s+struct\s+CurseEffect\s+(sCurseEffects_[A-Za-z0-9_]+)\s*\[\]\s*=\s*{",
+        r"static\s+const\s+struct\s+RelicEffect\s+(sRelicEffects_[A-Za-z0-9_]+)\s*\[\]\s*=\s*{",
         re.M,
     )
     for match in pattern.finditer(text):
@@ -114,25 +115,24 @@ def parse_effects_arrays(path: Path) -> dict[str, list[Effect]]:
     return effects
 
 
-def parse_curse_defs(path: Path) -> dict[str, CurseDef]:
+def parse_relic_defs(path: Path) -> dict[str, RelicDef]:
     text = read_text(path)
-    defs: dict[str, CurseDef] = {}
-    pattern = re.compile(r"\[(CURSE_[A-Z0-9_]+)\]\s*=\s*{", re.M)
+    defs: dict[str, RelicDef] = {}
+    pattern = re.compile(r"\[(RELIC_[A-Z0-9_]+)\]\s*=\s*{", re.M)
     for match in pattern.finditer(text):
         symbol = match.group(1)
-        if symbol == "CURSE_COUNT":
+        if symbol == "RELIC_COUNT":
             continue
         _, _, block = extract_braced_block(text, match.end() - 1)
         name_raw = get_simple_field(block, "name")
-        desc_raw = get_simple_field(block, "description")
-        effects_name = get_simple_field(block, "effects")
-        effect_count_raw = get_simple_field(block, "effectCount")
-        defs[symbol] = CurseDef(
+        rarity_raw = get_simple_field(block, "rarity")
+        defs[symbol] = RelicDef(
             symbol=symbol,
             name=extract_string_literal(name_raw) or (name_raw.strip() if name_raw else None),
-            description=extract_string_literal(desc_raw) or (desc_raw.strip() if desc_raw else None),
-            effects_name=effects_name,
-            effect_count_raw=effect_count_raw,
+            rarity=rarity_raw,
+            descriptions=[None, None, None],
+            effects_names=[None, None, None],
+            effect_count_raws=[None, None, None],
         )
     return defs
 
@@ -146,73 +146,82 @@ def _normalize_selector(selector: dict) -> dict:
     }
 
 
-def build_curses() -> tuple[list[dict], list[str]]:
-    constants_path = ROOT / "include/constants/curses.h"
-    data_path = ROOT / "src/data/curses.h"
+def build_relics() -> tuple[list[dict], list[str]]:
+    constants_path = ROOT / "include/constants/relics.h"
+    data_path = ROOT / "src/data/relics.h"
 
-    curse_ids, curse_count = parse_curse_constants(constants_path)
+    relic_ids, relic_count = parse_relic_constants(constants_path)
     effects = parse_effects_arrays(data_path)
-    defs = parse_curse_defs(data_path)
+    defs = parse_relic_defs(data_path)
 
     errors: list[str] = []
-    if curse_count is None:
-        errors.append("CURSE_COUNT not found in constants.")
+    if relic_count is None:
+        errors.append("RELIC_COUNT not found in constants.")
     else:
-        if curse_ids:
-            max_id = max(curse_ids.values())
-            if max_id + 1 != curse_count:
-                errors.append(f"CURSE_COUNT={curse_count} but max id is {max_id}.")
+        if relic_ids:
+            max_id = max(relic_ids.values())
+            if max_id + 1 != relic_count:
+                errors.append(f"RELIC_COUNT={relic_count} but max id is {max_id}.")
 
-    curses: list[dict] = []
-    for symbol, curse_id in sorted(curse_ids.items(), key=lambda x: x[1]):
+    relics: list[dict] = []
+    for symbol, relic_id in sorted(relic_ids.items(), key=lambda x: x[1]):
         entry = defs.get(symbol)
         name = entry.name if entry else None
-        description = entry.description if entry else None
-        effects_name = entry.effects_name if entry else None
-        effect_list = effects.get(effects_name, []) if effects_name else []
-        implemented = bool(effect_list)
+        rarity = entry.rarity if entry else None
 
-        curses.append(
+        # Collect effects from all tier variants
+        tier_effects: list[list[dict]] = []
+        for tier_suffix in ["_T1", "_T2", "_T3"]:
+            effects_name = f"sRelicEffects_{name}{tier_suffix}" if name else None
+            effect_list = effects.get(effects_name, []) if effects_name else []
+            tier_effects.append([
+                {
+                    "type": eff.type,
+                    "stacking": eff.stacking,
+                    "selector": _normalize_selector(eff.selector),
+                    "multiplier": eff.multiplier,
+                    "multiplier_raw": eff.multiplier_raw,
+                }
+                for eff in effect_list
+            ])
+
+        implemented = any(len(te) > 0 for te in tier_effects)
+
+        relics.append(
             {
-                "id": curse_id,
+                "id": relic_id,
                 "symbol": symbol,
                 "name": name,
-                "description": description,
+                "rarity": rarity,
                 "implemented": implemented,
-                "effects": [
-                    {
-                        "type": eff.type,
-                        "stacking": eff.stacking,
-                        "selector": _normalize_selector(eff.selector),
-                        "multiplier": eff.multiplier,
-                        "multiplier_raw": eff.multiplier_raw,
-                    }
-                    for eff in effect_list
+                "tiers": [
+                    {"tier": t + 1, "effects": tier_effects[t]}
+                    for t in range(3)
                 ],
             }
         )
 
-        if symbol != "CURSE_NONE" and not implemented:
+        if symbol != "RELIC_NONE" and not implemented:
             errors.append(f"{symbol} has no implemented effects.")
 
-    extra_defs = [k for k in defs.keys() if k not in curse_ids]
+    extra_defs = [k for k in defs.keys() if k not in relic_ids]
     for symbol in extra_defs:
         errors.append(f"Definition {symbol} not declared in constants.")
 
-    return curses, errors
+    return relics, errors
 
 
 def _pretty_selector(selector: dict) -> str:
     side_map = {
-        "CURSE_SIDE_PLAYER": "PLAYER",
-        "CURSE_SIDE_OPPONENT": "OPPONENT",
-        "CURSE_SIDE_BOTH": "BOTH",
+        "RELIC_SIDE_PLAYER": "PLAYER",
+        "RELIC_SIDE_OPPONENT": "OPPONENT",
+        "RELIC_SIDE_BOTH": "BOTH",
     }
     category_map = {
         "DAMAGE_CATEGORY_PHYSICAL": "PHYSICAL",
         "DAMAGE_CATEGORY_SPECIAL": "SPECIAL",
         "DAMAGE_CATEGORY_STATUS": "STATUS",
-        "CURSE_MOVE_CATEGORY_ANY": "ANY",
+        "RELIC_MOVE_CATEGORY_ANY": "ANY",
     }
 
     side = side_map.get(selector.get("side"), selector.get("side") or "ANY")
@@ -235,7 +244,7 @@ def _effect_sentence(effect: dict) -> str:
     mult_raw = effect.get("multiplier_raw")
     selector = effect.get("selector") or {}
 
-    if effect_type == "CURSE_EFF_DAMAGE_TAKEN_MULT":
+    if effect_type == "RELIC_EFF_DAMAGE_TAKEN_MULT":
         mult_text = f"x{mult:.3f}" if isinstance(mult, float) else (mult_raw or "(unknown)")
         return f"Damage Taken {mult_text} ({stacking}) when {_pretty_selector(selector)}"
 
@@ -243,70 +252,73 @@ def _effect_sentence(effect: dict) -> str:
     return f"{effect_type} {mult_text} ({stacking}) when {_pretty_selector(selector)}"
 
 
-def write_json(curses: list[dict], out_path: Path) -> None:
+def write_json(relics: list[dict], out_path: Path) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "source_files": [
-            "include/constants/curses.h",
-            "src/data/curses.h",
+            "include/constants/relics.h",
+            "src/data/relics.h",
         ],
-        "curses": curses,
+        "relics": relics,
     }
     out_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def write_md(curses: list[dict], out_path: Path) -> None:
+def write_md(relics: list[dict], out_path: Path) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     lines: list[str] = []
-    lines.append("# Curses")
+    lines.append("# Relics")
     lines.append("")
     lines.append("## Index")
-    for curse in curses:
-        name = curse.get("name") or curse.get("symbol")
+    for relic in relics:
+        name = relic.get("name") or relic.get("symbol")
         anchor = name.lower().replace(" ", "-")
         lines.append(f"- [{name}](#{anchor})")
     lines.append("")
 
-    for curse in curses:
-        name = curse.get("name") or curse.get("symbol")
-        symbol = curse.get("symbol")
-        cid = curse.get("id")
+    for relic in relics:
+        name = relic.get("name") or relic.get("symbol")
+        symbol = relic.get("symbol")
+        rid = relic.get("id")
+        rarity = relic.get("rarity") or "(none)"
         lines.append(f"## {name}")
         lines.append("")
-        lines.append(f"- ID: `{cid}`")
+        lines.append(f"- ID: `{rid}`")
         lines.append(f"- Symbol: `{symbol}`")
-        desc = curse.get("description") or "(no description)"
-        lines.append(f"- Description: {desc}")
-        lines.append(f"- Implemented: {str(curse.get('implemented', False))}")
+        lines.append(f"- Rarity: {rarity}")
+        lines.append(f"- Implemented: {str(relic.get('implemented', False))}")
         lines.append("")
-        effects = curse.get("effects", [])
-        if effects:
-            lines.append("Effects:")
-            for effect in effects:
-                lines.append(f"- {_effect_sentence(effect)}")
-        else:
-            lines.append("Effects: (none)")
-        lines.append("")
+        tiers = relic.get("tiers", [])
+        for tier_data in tiers:
+            tier_num = tier_data.get("tier", "?")
+            effects = tier_data.get("effects", [])
+            lines.append(f"### Tier {tier_num}")
+            if effects:
+                for effect in effects:
+                    lines.append(f"- {_effect_sentence(effect)}")
+            else:
+                lines.append("- (none)")
+            lines.append("")
 
     out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Export curse data to JSON/Markdown")
-    parser.add_argument("--json", dest="json_path", default="exports/curses.json")
-    parser.add_argument("--md", dest="md_path", default="exports/curses.md")
+    parser = argparse.ArgumentParser(description="Export relic data to JSON/Markdown")
+    parser.add_argument("--json", dest="json_path", default="exports/relics.json")
+    parser.add_argument("--md", dest="md_path", default="exports/relics.md")
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
 
-    curses, errors = build_curses()
+    relics, errors = build_relics()
 
     if args.check:
         if errors:
             for err in errors:
                 print(f"error: {err}")
             return 1
-        print("ok: curses registry checks passed")
+        print("ok: relics registry checks passed")
         return 0
 
     if errors:
@@ -315,9 +327,9 @@ def main() -> int:
 
     json_path = Path(args.json_path)
     md_path = Path(args.md_path)
-    write_json(curses, json_path)
-    write_md(curses, md_path)
-    print(f"Exported {len(curses)} curses -> {json_path}, {md_path}")
+    write_json(relics, json_path)
+    write_md(relics, md_path)
+    print(f"Exported {len(relics)} relics -> {json_path}, {md_path}")
     return 0
 
 
