@@ -4,9 +4,11 @@
 #include "relic.h"
 #include "event_data.h"
 #include "move.h"
+#include "new_game.h"
 
 #include "constants/relics.h"
 #include "constants/pokemon.h"
+#include "constants/vars.h"
 
 #include "data/relics.h"
 
@@ -141,6 +143,9 @@ static bool32 GetEffectHook(u8 effectType, enum RelicHook *hook)
     case RELIC_EFF_STARTER_POOL_FILTER:
         *hook = RELIC_HOOK_STARTER_POOL_BUILD;
         return TRUE;
+    case RELIC_EFF_STARTER_SLOT_OVERRIDE:
+        *hook = RELIC_HOOK_STARTER_POOL_BUILD;
+        return TRUE;
     default:
         return FALSE;
     }
@@ -156,6 +161,8 @@ static bool32 EffectStackingIsValid(const struct RelicEffect *effect)
         return effect->stacking == RELIC_STACK_ADD_FLAT;
     case RELIC_EFF_STARTER_POOL_FILTER:
         return effect->stacking == RELIC_STACK_OVERRIDE || effect->stacking == RELIC_STACK_ADD_FLAT;
+    case RELIC_EFF_STARTER_SLOT_OVERRIDE:
+        return effect->stacking == RELIC_STACK_OVERRIDE;
     default:
         return FALSE;
     }
@@ -302,32 +309,78 @@ static u8 StarterPoolRemoveSpecies(u16 species[], u8 count, u16 target)
     return write;
 }
 
-static u8 ApplyStarterPoolFilters(u16 species[], u8 count, u8 capacity, const struct RelicEffect *matched[], u32 numMatched, bool32 *changed)
+static u16 ChooseStarterSlotOverrideSpecies(const struct RelicStarterSlotOverrideParams *params)
+{
+    u32 trainerId;
+
+    if (params == NULL)
+        return SPECIES_NONE;
+
+    trainerId = GetTrainerId(gSaveBlock2Ptr->playerTrainerId);
+    if (((trainerId >> params->slot) & 1) != 0)
+        return params->speciesSecondary;
+
+    return params->speciesPrimary;
+}
+
+static u8 ApplyStarterPoolEffects(u16 species[], u8 count, u8 capacity, const struct RelicEffect *matched[], u32 numMatched, bool32 *changed)
 {
     u32 i;
 
     for (i = 0; i < numMatched; i++)
     {
-        const struct RelicStarterPoolFilterParams *params = matched[i]->params;
-
-        if (params == NULL)
-            continue;
-
-        switch (params->operation)
+        switch (matched[i]->type)
         {
-        case RELIC_STARTER_POOL_ADD:
-            if (count < capacity && !StarterPoolContainsSpecies(species, count, params->species))
+        case RELIC_EFF_STARTER_POOL_FILTER:
             {
-                species[count++] = params->species;
-                *changed = TRUE;
+                const struct RelicStarterPoolFilterParams *params = matched[i]->params;
+
+                if (params == NULL)
+                    break;
+
+                switch (params->operation)
+                {
+                case RELIC_STARTER_POOL_ADD:
+                    if (count < capacity && !StarterPoolContainsSpecies(species, count, params->species))
+                    {
+                        species[count++] = params->species;
+                        *changed = TRUE;
+                    }
+                    break;
+                case RELIC_STARTER_POOL_REMOVE:
+                {
+                    u8 prevCount = count;
+                    count = StarterPoolRemoveSpecies(species, count, params->species);
+                    if (count != prevCount)
+                        *changed = TRUE;
+                    break;
+                }
+                default:
+                    RELIC_DEBUG_ASSERT(FALSE);
+                    break;
+                }
             }
             break;
-        case RELIC_STARTER_POOL_REMOVE:
+        case RELIC_EFF_STARTER_SLOT_OVERRIDE:
         {
-            u8 prevCount = count;
-            count = StarterPoolRemoveSpecies(species, count, params->species);
-            if (count != prevCount)
+            const struct RelicStarterSlotOverrideParams *params = matched[i]->params;
+            u16 replacement;
+
+            if (params == NULL || params->slot >= capacity)
+                break;
+
+            replacement = ChooseStarterSlotOverrideSpecies(params);
+            if (replacement == SPECIES_NONE)
+                break;
+
+            if (params->slot >= count)
+                count = params->slot + 1;
+
+            if (species[params->slot] != replacement)
+            {
+                species[params->slot] = replacement;
                 *changed = TRUE;
+            }
             break;
         }
         default:
@@ -501,9 +554,14 @@ u8 Relic_GetMaxActiveSlots(void)
 void Relic_InitDefaults(void)
 {
     Relic_ClearAll();
-    Relic_SetSlot(0, RELIC_BULWARK, RELIC_TIER_1);
-    Relic_SetSlot(1, RELIC_PRECISION, RELIC_TIER_1);
-    Relic_SetSlot(2, RELIC_EXPOSED, RELIC_TIER_1);
+    VarSet(VAR_STARTER_OFFER_LOCKED, FALSE);
+    VarSet(VAR_STARTER_OFFER_SLOT_0_SPECIES, SPECIES_NONE);
+    VarSet(VAR_STARTER_OFFER_SLOT_1_SPECIES, SPECIES_NONE);
+    VarSet(VAR_STARTER_OFFER_SLOT_2_SPECIES, SPECIES_NONE);
+    Relic_SetSlot(0, RELIC_DRACONIC_ANCESTRY, RELIC_TIER_1);
+    Relic_SetSlot(1, RELIC_BULWARK, RELIC_TIER_1);
+    Relic_SetSlot(2, RELIC_PRECISION, RELIC_TIER_1);
+    Relic_SetSlot(3, RELIC_EXPOSED, RELIC_TIER_1);
 }
 
 bool32 Relic_ApplyHook(enum RelicHook hook, const struct RelicHookContext *ctx, struct RelicHookResult *out)
@@ -563,7 +621,7 @@ bool32 Relic_ApplyHook(enum RelicHook hook, const struct RelicHookContext *ctx, 
         if (out->starterPoolCount > ctx->starterPool.capacity)
             out->starterPoolCount = ctx->starterPool.capacity;
 
-        out->starterPoolCount = ApplyStarterPoolFilters(ctx->starterPool.species, out->starterPoolCount, ctx->starterPool.capacity, matched, numMatched, &out->changed);
+        out->starterPoolCount = ApplyStarterPoolEffects(ctx->starterPool.species, out->starterPoolCount, ctx->starterPool.capacity, matched, numMatched, &out->changed);
         return TRUE;
     default:
         return FALSE;

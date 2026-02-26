@@ -6,7 +6,8 @@
 #define RELIC_BULWARK 1
 #define RELIC_PRECISION 2
 #define RELIC_EXPOSED 3
-#define RELIC_COUNT 4
+#define RELIC_DRACONIC_ANCESTRY 4
+#define RELIC_COUNT 5
 
 // Effect types
 enum RelicEffectType
@@ -14,6 +15,7 @@ enum RelicEffectType
     RELIC_EFF_DAMAGE_TAKEN_MULT,
     RELIC_EFF_ACCURACY_FLAT_BONUS,
     RELIC_EFF_STARTER_POOL_FILTER,
+    RELIC_EFF_STARTER_SLOT_OVERRIDE,
 };
 
 // Stacking rules

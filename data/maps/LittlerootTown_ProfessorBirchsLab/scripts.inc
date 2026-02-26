@@ -65,6 +65,7 @@ LittlerootTown_ProfessorBirchsLab_EventScript_SetPlayerPosForReceiveStarter::
 
 LittlerootTown_ProfessorBirchsLab_EventScript_SetObjectPosForStarterSelection::
 	turnobject LOCALID_PLAYER, DIR_NORTH
+	special Special_LockStarterOffer
 	addobject LOCALID_BIRCHS_LAB_BIRCH
 	addobject LOCALID_BIRCHS_LAB_CYNDAQUIL_BALL
 	addobject LOCALID_BIRCHS_LAB_TOTODILE_BALL
@@ -359,8 +360,11 @@ LittlerootTown_ProfessorBirchsLab_EventScript_ChooseTreecko::
 	lockall
 	applymovement LOCALID_BIRCHS_LAB_BIRCH, Common_Movement_WalkInPlaceFasterRight
 	waitmovement 0
-	showmonpic SPECIES_TREECKO, 10, 3
-	msgbox LittlerootTown_ProfessorBirchsLab_Text_YoullTakeTreecko, MSGBOX_YESNO
+	setvar VAR_0x8004, 0
+	special Special_GetStarterSpeciesForSlot
+	bufferspeciesname STR_VAR_1, VAR_RESULT
+	showmonpic VAR_RESULT, 10, 3
+	msgbox LittlerootTown_ProfessorBirchsLab_Text_YoullTakeStarter, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, LittlerootTown_ProfessorBirchsLab_EventScript_TakeYourTime
 	goto LittlerootTown_ProfessorBirchsLab_EventScript_GiveTreecko
 	end
@@ -369,8 +373,11 @@ LittlerootTown_ProfessorBirchsLab_EventScript_ChooseTorchic::
 	lockall
 	applymovement LOCALID_BIRCHS_LAB_BIRCH, Common_Movement_WalkInPlaceFasterRight
 	waitmovement 0
-	showmonpic SPECIES_TORCHIC, 10, 3
-	msgbox LittlerootTown_ProfessorBirchsLab_Text_YoullTakeTorchic, MSGBOX_YESNO
+	setvar VAR_0x8004, 1
+	special Special_GetStarterSpeciesForSlot
+	bufferspeciesname STR_VAR_1, VAR_RESULT
+	showmonpic VAR_RESULT, 10, 3
+	msgbox LittlerootTown_ProfessorBirchsLab_Text_YoullTakeStarter, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, LittlerootTown_ProfessorBirchsLab_EventScript_TakeYourTime
 	goto LittlerootTown_ProfessorBirchsLab_EventScript_GiveTorchic
 	end
@@ -379,14 +386,19 @@ LittlerootTown_ProfessorBirchsLab_EventScript_ChooseMudkip::
 	lockall
 	applymovement LOCALID_BIRCHS_LAB_BIRCH, Common_Movement_WalkInPlaceFasterRight
 	waitmovement 0
-	showmonpic SPECIES_MUDKIP, 10, 3
-	msgbox LittlerootTown_ProfessorBirchsLab_Text_YoullTakeMudkip, MSGBOX_YESNO
+	setvar VAR_0x8004, 2
+	special Special_GetStarterSpeciesForSlot
+	bufferspeciesname STR_VAR_1, VAR_RESULT
+	showmonpic VAR_RESULT, 10, 3
+	msgbox LittlerootTown_ProfessorBirchsLab_Text_YoullTakeStarter, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, LittlerootTown_ProfessorBirchsLab_EventScript_TakeYourTime
 	goto LittlerootTown_ProfessorBirchsLab_EventScript_GiveMudkip
 	end
 
 LittlerootTown_ProfessorBirchsLab_EventScript_GiveTreecko::
-	givemon SPECIES_TREECKO, 5
+	setvar VAR_0x8004, 0
+	special Special_GetStarterSpeciesForSlot
+	givemon VAR_RESULT, 5
 	goto_if_eq VAR_RESULT, MON_GIVEN_TO_PARTY, LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedTreecko
 	goto_if_eq VAR_RESULT, MON_GIVEN_TO_PC, LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedTreeckoToPC
 	hidemonpic
@@ -409,7 +421,9 @@ LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedTreeckoToPC::
 	end
 
 LittlerootTown_ProfessorBirchsLab_EventScript_GiveTorchic::
-	givemon SPECIES_TORCHIC, 5
+	setvar VAR_0x8004, 1
+	special Special_GetStarterSpeciesForSlot
+	givemon VAR_RESULT, 5
 	goto_if_eq VAR_RESULT, MON_GIVEN_TO_PARTY, LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedTorchic
 	goto_if_eq VAR_RESULT, MON_GIVEN_TO_PC, LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedTorchicToPC
 	hidemonpic
@@ -432,7 +446,9 @@ LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedTorchicToPC::
 	end
 
 LittlerootTown_ProfessorBirchsLab_EventScript_GiveMudkip::
-	givemon SPECIES_MUDKIP, 5
+	setvar VAR_0x8004, 2
+	special Special_GetStarterSpeciesForSlot
+	givemon VAR_RESULT, 5
 	goto_if_eq VAR_RESULT, MON_GIVEN_TO_PARTY, LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedMudkip
 	goto_if_eq VAR_RESULT, MON_GIVEN_TO_PC, LittlerootTown_ProfessorBirchsLab_EventScript_ReceivedMudkipToPC
 	hidemonpic
@@ -1095,23 +1111,12 @@ LittlerootTown_ProfessorBirchsLab_Text_CanHaveAnyOneOfRarePokemon:
 	.string "You can have any one of these\n"
 	.string "three POKéMON!$"
 
-LittlerootTown_ProfessorBirchsLab_Text_YoullTakeTreecko:
-	.string "PROF. BIRCH: The WOOD GECKO POKéMON,\n"
-	.string "TREECKO.\p"
-	.string "Quick eyes. Quicker hands.\p"
-	.string "Is TREECKO your choice?$"
-
-LittlerootTown_ProfessorBirchsLab_Text_YoullTakeTorchic:
-	.string "PROF. BIRCH: The CHICK POKéMON,\n"
-	.string "TORCHIC.\p"
-	.string "A small flame, but a fierce heart.\p"
-	.string "Will you choose TORCHIC?$"
-
-LittlerootTown_ProfessorBirchsLab_Text_YoullTakeMudkip:
-	.string "PROF. BIRCH: The MUD FISH POKéMON,\n"
-	.string "MUDKIP.\p"
-	.string "Steady as stone, even in deep water.\p"
-	.string "Is MUDKIP the one?$"
+LittlerootTown_ProfessorBirchsLab_Text_YoullTakeStarter:
+	.string "PROF. BIRCH: The {STR_VAR_1} caught\n"
+	.string "your eye, hm?\p"
+	.string "You can tell it'll grow into a\n"
+	.string "remarkable partner.\p"
+	.string "So, you'll choose {STR_VAR_1}?$"
 
 LittlerootTown_ProfessorBirchsLab_Text_YoullTakeCyndaquil:
 	.string "PROF. BIRCH: The FIRE POKéMON\n"

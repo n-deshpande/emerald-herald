@@ -20,6 +20,8 @@ struct StarterOffer
 void BuildStarterOffer(struct StarterOffer *offer);
 u16 GetStarterPokemonFromOffer(const struct StarterOffer *offer, u16 chosenStarterId);
 u16 GetStarterPokemon(u16 chosenStarterId);
+void LockStarterOffer(const struct StarterOffer *offer);
+void BuildAndLockStarterOfferIfNeeded(void);
 void CB2_ChooseStarter(void);
 
 #endif // GUARD_STARTER_CHOOSE_H

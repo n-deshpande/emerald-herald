@@ -172,6 +172,16 @@ void Special_InitRelics(void)
     Relic_InitDefaults();
 }
 
+void Special_LockStarterOffer(void)
+{
+    BuildAndLockStarterOfferIfNeeded();
+}
+
+void Special_GetStarterSpeciesForSlot(void)
+{
+    gSpecialVar_Result = GetStarterPokemon(gSpecialVar_0x8004);
+}
+
 void Special_OpenRelicMenu(void)
 {
     ShowRelicMenu(CB2_ReturnToFieldContinueScriptPlayMapMusic);

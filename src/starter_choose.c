@@ -394,6 +394,64 @@ static void NormalizeStarterOffer(struct StarterOffer *offer)
     offer->count = STARTER_OFFER_COUNT;
 }
 
+static bool32 IsStarterOfferLocked(void)
+{
+    u16 species0;
+    u16 species1;
+    u16 species2;
+
+    if (VarGet(VAR_STARTER_OFFER_LOCKED) == FALSE)
+        return FALSE;
+
+    species0 = VarGet(VAR_STARTER_OFFER_SLOT_0_SPECIES);
+    species1 = VarGet(VAR_STARTER_OFFER_SLOT_1_SPECIES);
+    species2 = VarGet(VAR_STARTER_OFFER_SLOT_2_SPECIES);
+
+    if (species0 == SPECIES_NONE || species1 == SPECIES_NONE || species2 == SPECIES_NONE)
+        return FALSE;
+
+    if (!IsSpeciesEnabled(species0) || !IsSpeciesEnabled(species1) || !IsSpeciesEnabled(species2))
+        return FALSE;
+
+    return TRUE;
+}
+
+static void LoadLockedStarterOffer(struct StarterOffer *offer)
+{
+    offer->species[0] = VarGet(VAR_STARTER_OFFER_SLOT_0_SPECIES);
+    offer->species[1] = VarGet(VAR_STARTER_OFFER_SLOT_1_SPECIES);
+    offer->species[2] = VarGet(VAR_STARTER_OFFER_SLOT_2_SPECIES);
+    offer->count = STARTER_OFFER_COUNT;
+}
+
+void LockStarterOffer(const struct StarterOffer *offer)
+{
+    struct StarterOffer normalizedOffer;
+
+    if (offer == NULL)
+        return;
+
+    normalizedOffer = *offer;
+    NormalizeStarterOffer(&normalizedOffer);
+
+    VarSet(VAR_STARTER_OFFER_SLOT_0_SPECIES, normalizedOffer.species[0]);
+    VarSet(VAR_STARTER_OFFER_SLOT_1_SPECIES, normalizedOffer.species[1]);
+    VarSet(VAR_STARTER_OFFER_SLOT_2_SPECIES, normalizedOffer.species[2]);
+    VarSet(VAR_STARTER_OFFER_LOCKED, TRUE);
+}
+
+void BuildAndLockStarterOfferIfNeeded(void)
+{
+    struct StarterOffer offer;
+
+    if (IsStarterOfferLocked())
+        return;
+
+    // Starter-affecting relics are resolved exactly once when the starter scene opens.
+    BuildStarterOffer(&offer);
+    LockStarterOffer(&offer);
+}
+
 void BuildStarterOffer(struct StarterOffer *offer)
 {
     struct RelicHookContext hookCtx = {0};
@@ -402,6 +460,13 @@ void BuildStarterOffer(struct StarterOffer *offer)
 
     if (offer == NULL)
         return;
+
+    if (IsStarterOfferLocked())
+    {
+        LoadLockedStarterOffer(offer);
+        NormalizeStarterOffer(offer);
+        return;
+    }
 
     for (i = 0; i < STARTER_OFFER_COUNT; i++)
         offer->species[i] = sStarterMon[i];

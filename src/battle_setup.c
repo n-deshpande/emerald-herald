@@ -870,16 +870,19 @@ enum BattleTransition GetSpecialBattleTransition(enum BattleTransitionGroup id)
 
 void ChooseStarter(void)
 {
+    BuildAndLockStarterOfferIfNeeded();
     SetMainCallback2(CB2_ChooseStarter);
     gMain.savedCallback = CB2_GiveStarter;
 }
 
 static void CB2_GiveStarter(void)
 {
+    struct StarterOffer offer;
     u16 starterMon;
 
     *GetVarPointer(VAR_STARTER_MON) = gSpecialVar_Result;
-    starterMon = GetStarterPokemon(gSpecialVar_Result);
+    BuildStarterOffer(&offer);
+    starterMon = GetStarterPokemonFromOffer(&offer, gSpecialVar_Result);
     ScriptGiveMon(starterMon, 5, ITEM_NONE);
     ResetTasks();
     PlayBattleBGM();

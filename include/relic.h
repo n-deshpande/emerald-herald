@@ -54,6 +54,13 @@ struct RelicStarterPoolFilterParams
     u8 operation;
 };
 
+struct RelicStarterSlotOverrideParams
+{
+    u8 slot;
+    u16 speciesPrimary;
+    u16 speciesSecondary;
+};
+
 struct RelicEffect
 {
     u8 type;
@@ -130,7 +137,7 @@ struct RelicHookResult
     (__builtin_types_compatible_p(__typeof__(ptr), type *) || __builtin_types_compatible_p(__typeof__(ptr), const type *))
 
 #define RELIC_TYPED_PARAMS(ptr, type) \
-    ((void)sizeof(char[(RELIC_TYPE_PTR_MATCH((ptr), type)) ? 1 : -1]), (const void *)(ptr))
+    (const void *)((const char *)(ptr) + 0 * sizeof(char[(RELIC_TYPE_PTR_MATCH((ptr), type)) ? 1 : -1]))
 
 #define RELIC_EFFECT_DAMAGE_TAKEN(stackingRule, paramsPtr) \
     {                                                       \
@@ -151,6 +158,13 @@ struct RelicHookResult
         .type = RELIC_EFF_STARTER_POOL_FILTER,             \
         .stacking = (stackingRule),                        \
         .params = RELIC_TYPED_PARAMS((paramsPtr), struct RelicStarterPoolFilterParams), \
+    }
+
+#define RELIC_EFFECT_STARTER_SLOT_OVERRIDE(stackingRule, paramsPtr) \
+    {                                                                \
+        .type = RELIC_EFF_STARTER_SLOT_OVERRIDE,                     \
+        .stacking = (stackingRule),                                  \
+        .params = RELIC_TYPED_PARAMS((paramsPtr), struct RelicStarterSlotOverrideParams), \
     }
 
 void Relic_InitDefaults(void);

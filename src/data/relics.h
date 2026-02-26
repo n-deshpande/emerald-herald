@@ -141,6 +141,50 @@ static const struct RelicEffect sRelicEffects_Exposed_T3[] =
     RELIC_EFFECT_DAMAGE_TAKEN(RELIC_STACK_MULTIPLY, &sRelicParams_Exposed_T3),
 };
 
+// ── Draconic Ancestry (starter slot overrides) ─────────────────────
+
+static const struct RelicStarterSlotOverrideParams sRelicParams_DraconicAncestry_Slot0 =
+{
+    .slot = 0,
+    .speciesPrimary = SPECIES_DREEPY,
+    .speciesSecondary = SPECIES_GIBLE,
+};
+
+static const struct RelicStarterSlotOverrideParams sRelicParams_DraconicAncestry_Slot1 =
+{
+    .slot = 1,
+    .speciesPrimary = SPECIES_JANGMO_O,
+    .speciesSecondary = SPECIES_BAGON,
+};
+
+static const struct RelicStarterSlotOverrideParams sRelicParams_DraconicAncestry_Slot2 =
+{
+    .slot = 2,
+    .speciesPrimary = SPECIES_DRATINI,
+    .speciesSecondary = SPECIES_GOOMY,
+};
+
+static const struct RelicEffect sRelicEffects_DraconicAncestry_T1[] =
+{
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot0),
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot1),
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot2),
+};
+
+static const struct RelicEffect sRelicEffects_DraconicAncestry_T2[] =
+{
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot0),
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot1),
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot2),
+};
+
+static const struct RelicEffect sRelicEffects_DraconicAncestry_T3[] =
+{
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot0),
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot1),
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot2),
+};
+
 // ── Relic definitions table ─────────────────────────────────────────
 
 // Relic menu detail pane renders description text as-authored.
@@ -192,6 +236,22 @@ static const struct RelicDef sRelicDefs[RELIC_COUNT] =
         },
         .effects = { sRelicEffects_Exposed_T1, sRelicEffects_Exposed_T2, sRelicEffects_Exposed_T3 },
         .effectCount = { ARRAY_COUNT(sRelicEffects_Exposed_T1), ARRAY_COUNT(sRelicEffects_Exposed_T2), ARRAY_COUNT(sRelicEffects_Exposed_T3) },
+    },
+    [RELIC_DRACONIC_ANCESTRY] =
+    {
+        .name = COMPOUND_STRING("Draconic Ancestry"),
+        .rarity = RELIC_RARITY_UNCOMMON,
+        .acquisitionFlags = RELIC_ACQF_IDENTITY_DRAFT,
+        .descriptions = {
+            COMPOUND_STRING("Starter slots become\n"
+                            "dragon descendants."),
+            COMPOUND_STRING("Starter slots become\n"
+                            "dragon descendants."),
+            COMPOUND_STRING("Starter slots become\n"
+                            "dragon descendants."),
+        },
+        .effects = { sRelicEffects_DraconicAncestry_T1, sRelicEffects_DraconicAncestry_T2, sRelicEffects_DraconicAncestry_T3 },
+        .effectCount = { ARRAY_COUNT(sRelicEffects_DraconicAncestry_T1), ARRAY_COUNT(sRelicEffects_DraconicAncestry_T2), ARRAY_COUNT(sRelicEffects_DraconicAncestry_T3) },
     },
 };
 

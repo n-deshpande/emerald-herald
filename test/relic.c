@@ -1,4 +1,6 @@
 #include "global.h"
+#include "event_data.h"
+#include "new_game.h"
 #include "relic.h"
 #include "rival_starter.h"
 #include "starter_choose.h"
@@ -6,6 +8,19 @@
 
 #include "constants/opponents.h"
 #include "constants/pokemon.h"
+
+static void ResetStarterOfferLock(void)
+{
+    VarSet(VAR_STARTER_OFFER_LOCKED, FALSE);
+    VarSet(VAR_STARTER_OFFER_SLOT_0_SPECIES, SPECIES_NONE);
+    VarSet(VAR_STARTER_OFFER_SLOT_1_SPECIES, SPECIES_NONE);
+    VarSet(VAR_STARTER_OFFER_SLOT_2_SPECIES, SPECIES_NONE);
+}
+
+static void SetTestTrainerId(u32 trainerId)
+{
+    SetTrainerId(trainerId, gSaveBlock2Ptr->playerTrainerId);
+}
 
 TEST("Relic_ClearAll clears all relic slots")
 {
@@ -150,6 +165,7 @@ TEST("BuildStarterOffer returns default three-choice starter offer")
     struct StarterOffer offer = {0};
     u8 i;
 
+    ResetStarterOfferLock();
     Relic_ClearAll();
     BuildStarterOffer(&offer);
 
@@ -164,6 +180,7 @@ TEST("BuildStarterOffer is deterministic without starter-pool relic effects")
     struct StarterOffer offerB = {0};
     u8 i;
 
+    ResetStarterOfferLock();
     Relic_ClearAll();
     BuildStarterOffer(&offerA);
     BuildStarterOffer(&offerB);
@@ -172,6 +189,92 @@ TEST("BuildStarterOffer is deterministic without starter-pool relic effects")
     EXPECT_EQ(offerA.count, offerB.count);
     for (i = 0; i < STARTER_OFFER_COUNT; i++)
         EXPECT_EQ(offerA.species[i], offerB.species[i]);
+}
+
+TEST("BuildStarterOffer applies Draconic Ancestry with primary species when trainer id bits are clear")
+{
+    struct StarterOffer offer = {0};
+
+    ResetStarterOfferLock();
+    Relic_ClearAll();
+    SetTestTrainerId(0);
+    Relic_SetSlot(0, RELIC_DRACONIC_ANCESTRY, RELIC_TIER_1);
+    BuildStarterOffer(&offer);
+
+    EXPECT_EQ(offer.count, STARTER_OFFER_COUNT);
+    EXPECT_EQ(offer.species[0], SPECIES_DREEPY);
+    EXPECT_EQ(offer.species[1], SPECIES_JANGMO_O);
+    EXPECT_EQ(offer.species[2], SPECIES_DRATINI);
+    ResetStarterOfferLock();
+}
+
+TEST("BuildStarterOffer applies Draconic Ancestry with secondary species when trainer id bits are set")
+{
+    struct StarterOffer offer = {0};
+
+    ResetStarterOfferLock();
+    Relic_ClearAll();
+    SetTestTrainerId(7);
+    Relic_SetSlot(0, RELIC_DRACONIC_ANCESTRY, RELIC_TIER_1);
+    BuildStarterOffer(&offer);
+
+    EXPECT_EQ(offer.count, STARTER_OFFER_COUNT);
+    EXPECT_EQ(offer.species[0], SPECIES_GIBLE);
+    EXPECT_EQ(offer.species[1], SPECIES_BAGON);
+    EXPECT_EQ(offer.species[2], SPECIES_GOOMY);
+    ResetStarterOfferLock();
+}
+
+TEST("Starter offer lock keeps species stable after Draconic Ancestry is removed")
+{
+    struct StarterOffer lockedOffer = {0};
+    struct StarterOffer currentOffer = {0};
+
+    ResetStarterOfferLock();
+    Relic_ClearAll();
+    SetTestTrainerId(7);
+    Relic_SetSlot(0, RELIC_DRACONIC_ANCESTRY, RELIC_TIER_1);
+    BuildStarterOffer(&lockedOffer);
+    LockStarterOffer(&lockedOffer);
+
+    Relic_ClearAll();
+    SetTestTrainerId(0);
+    BuildStarterOffer(&currentOffer);
+
+    EXPECT_EQ(currentOffer.count, STARTER_OFFER_COUNT);
+    EXPECT_EQ(currentOffer.species[0], SPECIES_GIBLE);
+    EXPECT_EQ(currentOffer.species[1], SPECIES_BAGON);
+    EXPECT_EQ(currentOffer.species[2], SPECIES_GOOMY);
+    EXPECT_EQ(GetStarterPokemon(0), SPECIES_GIBLE);
+    EXPECT_EQ(GetStarterPokemon(1), SPECIES_BAGON);
+    EXPECT_EQ(GetStarterPokemon(2), SPECIES_GOOMY);
+    ResetStarterOfferLock();
+}
+
+TEST("BuildAndLockStarterOfferIfNeeded freezes starter offer before selection")
+{
+    struct StarterOffer frozenOffer = {0};
+    struct StarterOffer afterRelicChange = {0};
+
+    ResetStarterOfferLock();
+    Relic_ClearAll();
+    SetTestTrainerId(7);
+    Relic_SetSlot(0, RELIC_DRACONIC_ANCESTRY, RELIC_TIER_1);
+
+    BuildAndLockStarterOfferIfNeeded();
+    BuildStarterOffer(&frozenOffer);
+
+    Relic_ClearAll();
+    SetTestTrainerId(0);
+    BuildStarterOffer(&afterRelicChange);
+
+    EXPECT_EQ(frozenOffer.species[0], SPECIES_GIBLE);
+    EXPECT_EQ(frozenOffer.species[1], SPECIES_BAGON);
+    EXPECT_EQ(frozenOffer.species[2], SPECIES_GOOMY);
+    EXPECT_EQ(afterRelicChange.species[0], SPECIES_GIBLE);
+    EXPECT_EQ(afterRelicChange.species[1], SPECIES_BAGON);
+    EXPECT_EQ(afterRelicChange.species[2], SPECIES_GOOMY);
+    ResetStarterOfferLock();
 }
 
 TEST("GetStarterPokemonFromOffer clamps invalid selection index to slot zero")
