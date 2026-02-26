@@ -10,6 +10,7 @@
 #include "palette.h"
 #include "pokedex.h"
 #include "pokemon.h"
+#include "relic.h"
 #include "scanline_effect.h"
 #include "sound.h"
 #include "sprite.h"
@@ -24,7 +25,7 @@
 #include "constants/songs.h"
 #include "constants/rgb.h"
 
-#define STARTER_MON_COUNT   3
+#define STARTER_MON_COUNT   STARTER_OFFER_COUNT
 
 // Position of the sprite of the selected starter Pokémon
 #define STARTER_PKMN_POS_X (DISPLAY_WIDTH / 2)
@@ -348,11 +349,98 @@ static const struct SpriteTemplate sSpriteTemplate_StarterCircle =
 };
 
 // .text
+static bool32 StarterOfferContainsSpecies(const u16 species[STARTER_OFFER_COUNT], u8 count, u16 target)
+{
+    u8 i;
+
+    for (i = 0; i < count; i++)
+    {
+        if (species[i] == target)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+static void NormalizeStarterOffer(struct StarterOffer *offer)
+{
+    u16 normalized[STARTER_OFFER_COUNT];
+    u8 normalizedCount = 0;
+    u8 i;
+
+    for (i = 0; i < offer->count && i < STARTER_OFFER_COUNT; i++)
+    {
+        if (offer->species[i] != SPECIES_NONE
+         && !StarterOfferContainsSpecies(normalized, normalizedCount, offer->species[i]))
+        {
+            normalized[normalizedCount++] = offer->species[i];
+        }
+    }
+
+    if (normalizedCount != STARTER_OFFER_COUNT)
+        AGB_ASSERT(FALSE);
+
+    for (i = 0; i < STARTER_OFFER_COUNT && normalizedCount < STARTER_OFFER_COUNT; i++)
+    {
+        if (!StarterOfferContainsSpecies(normalized, normalizedCount, sStarterMon[i]))
+            normalized[normalizedCount++] = sStarterMon[i];
+    }
+
+    while (normalizedCount < STARTER_OFFER_COUNT)
+        normalized[normalizedCount++] = sStarterMon[0];
+
+    for (i = 0; i < STARTER_OFFER_COUNT; i++)
+        offer->species[i] = normalized[i];
+    offer->count = STARTER_OFFER_COUNT;
+}
+
+void BuildStarterOffer(struct StarterOffer *offer)
+{
+    struct RelicHookContext hookCtx = {0};
+    struct RelicHookResult hookResult = {0};
+    u8 i;
+
+    if (offer == NULL)
+        return;
+
+    for (i = 0; i < STARTER_OFFER_COUNT; i++)
+        offer->species[i] = sStarterMon[i];
+    offer->count = STARTER_OFFER_COUNT;
+
+    hookCtx.starterPool.species = offer->species;
+    hookCtx.starterPool.count = offer->count;
+    hookCtx.starterPool.capacity = STARTER_OFFER_COUNT;
+
+    if (!Relic_ApplyHook(RELIC_HOOK_STARTER_POOL_BUILD, &hookCtx, &hookResult))
+    {
+        NormalizeStarterOffer(offer);
+        return;
+    }
+
+    if (hookResult.starterPoolCount > STARTER_OFFER_COUNT)
+        hookResult.starterPoolCount = STARTER_OFFER_COUNT;
+
+    offer->count = hookResult.starterPoolCount;
+    NormalizeStarterOffer(offer);
+}
+
+u16 GetStarterPokemonFromOffer(const struct StarterOffer *offer, u16 chosenStarterId)
+{
+    if (offer == NULL || offer->count == 0)
+        return sStarterMon[0];
+
+    if (chosenStarterId >= offer->count)
+        chosenStarterId = 0;
+
+    return offer->species[chosenStarterId];
+}
+
 u16 GetStarterPokemon(u16 chosenStarterId)
 {
-    if (chosenStarterId > STARTER_MON_COUNT)
-        chosenStarterId = 0;
-    return sStarterMon[chosenStarterId];
+    struct StarterOffer offer;
+
+    BuildStarterOffer(&offer);
+    return GetStarterPokemonFromOffer(&offer, chosenStarterId);
 }
 
 static void VblankCB_StarterChoose(void)

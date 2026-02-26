@@ -37,29 +37,17 @@ static const struct RelicBattleDamageTakenParams sRelicParams_Bulwark_T3 =
 
 static const struct RelicEffect sRelicEffects_Bulwark_T1[] =
 {
-    {
-        .type = RELIC_EFF_DAMAGE_TAKEN_MULT,
-        .stacking = RELIC_STACK_MULTIPLY,
-        .params = &sRelicParams_Bulwark_T1,
-    },
+    RELIC_EFFECT_DAMAGE_TAKEN(RELIC_STACK_MULTIPLY, &sRelicParams_Bulwark_T1),
 };
 
 static const struct RelicEffect sRelicEffects_Bulwark_T2[] =
 {
-    {
-        .type = RELIC_EFF_DAMAGE_TAKEN_MULT,
-        .stacking = RELIC_STACK_MULTIPLY,
-        .params = &sRelicParams_Bulwark_T2,
-    },
+    RELIC_EFFECT_DAMAGE_TAKEN(RELIC_STACK_MULTIPLY, &sRelicParams_Bulwark_T2),
 };
 
 static const struct RelicEffect sRelicEffects_Bulwark_T3[] =
 {
-    {
-        .type = RELIC_EFF_DAMAGE_TAKEN_MULT,
-        .stacking = RELIC_STACK_MULTIPLY,
-        .params = &sRelicParams_Bulwark_T3,
-    },
+    RELIC_EFFECT_DAMAGE_TAKEN(RELIC_STACK_MULTIPLY, &sRelicParams_Bulwark_T3),
 };
 
 // ── Precision (accuracy bonus) ──────────────────────────────────────
@@ -93,29 +81,17 @@ static const struct RelicBattleAccuracyFlatParams sRelicParams_Precision_T3 =
 
 static const struct RelicEffect sRelicEffects_Precision_T1[] =
 {
-    {
-        .type = RELIC_EFF_ACCURACY_FLAT_BONUS,
-        .stacking = RELIC_STACK_ADD_PCT,
-        .params = &sRelicParams_Precision_T1,
-    },
+    RELIC_EFFECT_ACCURACY_FLAT(RELIC_STACK_ADD_FLAT, &sRelicParams_Precision_T1),
 };
 
 static const struct RelicEffect sRelicEffects_Precision_T2[] =
 {
-    {
-        .type = RELIC_EFF_ACCURACY_FLAT_BONUS,
-        .stacking = RELIC_STACK_ADD_PCT,
-        .params = &sRelicParams_Precision_T2,
-    },
+    RELIC_EFFECT_ACCURACY_FLAT(RELIC_STACK_ADD_FLAT, &sRelicParams_Precision_T2),
 };
 
 static const struct RelicEffect sRelicEffects_Precision_T3[] =
 {
-    {
-        .type = RELIC_EFF_ACCURACY_FLAT_BONUS,
-        .stacking = RELIC_STACK_ADD_PCT,
-        .params = &sRelicParams_Precision_T3,
-    },
+    RELIC_EFFECT_ACCURACY_FLAT(RELIC_STACK_ADD_FLAT, &sRelicParams_Precision_T3),
 };
 
 // ── Exposed (super-effective damage increase) ───────────────────────
@@ -152,29 +128,17 @@ static const struct RelicBattleDamageTakenParams sRelicParams_Exposed_T3 =
 
 static const struct RelicEffect sRelicEffects_Exposed_T1[] =
 {
-    {
-        .type = RELIC_EFF_DAMAGE_TAKEN_MULT,
-        .stacking = RELIC_STACK_MULTIPLY,
-        .params = &sRelicParams_Exposed_T1,
-    },
+    RELIC_EFFECT_DAMAGE_TAKEN(RELIC_STACK_MULTIPLY, &sRelicParams_Exposed_T1),
 };
 
 static const struct RelicEffect sRelicEffects_Exposed_T2[] =
 {
-    {
-        .type = RELIC_EFF_DAMAGE_TAKEN_MULT,
-        .stacking = RELIC_STACK_MULTIPLY,
-        .params = &sRelicParams_Exposed_T2,
-    },
+    RELIC_EFFECT_DAMAGE_TAKEN(RELIC_STACK_MULTIPLY, &sRelicParams_Exposed_T2),
 };
 
 static const struct RelicEffect sRelicEffects_Exposed_T3[] =
 {
-    {
-        .type = RELIC_EFF_DAMAGE_TAKEN_MULT,
-        .stacking = RELIC_STACK_MULTIPLY,
-        .params = &sRelicParams_Exposed_T3,
-    },
+    RELIC_EFFECT_DAMAGE_TAKEN(RELIC_STACK_MULTIPLY, &sRelicParams_Exposed_T3),
 };
 
 // ── Relic definitions table ─────────────────────────────────────────
@@ -188,6 +152,7 @@ static const struct RelicDef sRelicDefs[RELIC_COUNT] =
     {
         .name = COMPOUND_STRING("Bulwark"),
         .rarity = RELIC_RARITY_COMMON,
+        .acquisitionFlags = RELIC_ACQF_IDENTITY_DRAFT | RELIC_ACQF_MILESTONE_DRAW | RELIC_ACQF_TRADE_UP_TARGET,
         .descriptions = {
             COMPOUND_STRING("Your party takes\n15% less damage."),
             COMPOUND_STRING("Your party takes\n25% less damage."),
@@ -200,6 +165,7 @@ static const struct RelicDef sRelicDefs[RELIC_COUNT] =
     {
         .name = COMPOUND_STRING("Precision"),
         .rarity = RELIC_RARITY_COMMON,
+        .acquisitionFlags = RELIC_ACQF_IDENTITY_DRAFT | RELIC_ACQF_MILESTONE_DRAW | RELIC_ACQF_TRADE_UP_TARGET,
         .descriptions = {
             COMPOUND_STRING("Your moves gain\n+3 accuracy."),
             COMPOUND_STRING("Your moves gain\n+5 accuracy."),
@@ -212,6 +178,7 @@ static const struct RelicDef sRelicDefs[RELIC_COUNT] =
     {
         .name = COMPOUND_STRING("Exposed"),
         .rarity = RELIC_RARITY_COMMON,
+        .acquisitionFlags = RELIC_ACQF_IDENTITY_DRAFT | RELIC_ACQF_MILESTONE_DRAW | RELIC_ACQF_TRADE_UP_TARGET,
         .descriptions = {
             COMPOUND_STRING("Your party takes 20% more\n"
                             "damage from super-effective\n"

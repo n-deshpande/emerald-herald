@@ -13,6 +13,7 @@ enum RelicEffectType
 {
     RELIC_EFF_DAMAGE_TAKEN_MULT,
     RELIC_EFF_ACCURACY_FLAT_BONUS,
+    RELIC_EFF_STARTER_POOL_FILTER,
 };
 
 // Stacking rules
@@ -20,6 +21,7 @@ enum RelicStacking
 {
     RELIC_STACK_MULTIPLY,
     RELIC_STACK_ADD_PCT,
+    RELIC_STACK_ADD_FLAT,
     RELIC_STACK_MAX,
     RELIC_STACK_MIN,
     RELIC_STACK_OVERRIDE,
@@ -49,6 +51,15 @@ enum RelicRarity
     RELIC_RARITY_COMMON,
     RELIC_RARITY_UNCOMMON,
     RELIC_RARITY_RARE,
+    RELIC_RARITY_COUNT,
+};
+
+// Acquisition flags
+enum RelicAcquisitionFlags
+{
+    RELIC_ACQF_IDENTITY_DRAFT = (1 << 0),
+    RELIC_ACQF_MILESTONE_DRAW = (1 << 1),
+    RELIC_ACQF_TRADE_UP_TARGET = (1 << 2),
 };
 
 // Tier constants

@@ -32,6 +32,7 @@
 #include "field_weather.h"
 #include "battle_tower.h"
 #include "gym_leader_rematch.h"
+#include "rival_starter.h"
 #include "battle_pike.h"
 #include "battle_pyramid.h"
 #include "fldeff.h"
@@ -84,6 +85,7 @@ static void RegisterTrainerInMatchCall(void);
 static void HandleRematchVarsOnBattleEnd(void);
 static const u8 *GetIntroSpeechOfApproachingTrainer(void);
 static const u8 *GetTrainerCantBattleSpeech(void);
+static void RemapRivalOpponentsForCurrentStarter(void);
 
 EWRAM_DATA TrainerBattleParameter gTrainerBattleParameter = {0};
 EWRAM_DATA u16 gPartnerTrainerId = 0;
@@ -965,10 +967,19 @@ static void InitTrainerBattleVariables(void)
     sTrainerBattleEndScript = NULL;
 }
 
+static void RemapRivalOpponentsForCurrentStarter(void)
+{
+    u16 playerStarterSpecies = GetStarterPokemon(VarGet(VAR_STARTER_MON));
+
+    TRAINER_BATTLE_PARAM.opponentA = ResolveRivalTrainerId(TRAINER_BATTLE_PARAM.opponentA, playerStarterSpecies);
+    TRAINER_BATTLE_PARAM.opponentB = ResolveRivalTrainerId(TRAINER_BATTLE_PARAM.opponentB, playerStarterSpecies);
+}
+
 void TrainerBattleLoadArgs(const u8 *data)
 {
     InitTrainerBattleVariables();
     memcpy(gTrainerBattleParameter.data, data, sizeof(TrainerBattleParameter));
+    RemapRivalOpponentsForCurrentStarter();
     sTrainerBattleEndScript = (u8*)data + sizeof(TrainerBattleParameter);
 }
 
@@ -982,6 +993,7 @@ void TrainerBattleLoadArgsTrainerA(const u8 *data)
     TRAINER_BATTLE_PARAM.introTextA = temp->params.introTextA;
     TRAINER_BATTLE_PARAM.defeatTextA = temp->params.defeatTextA;
     TRAINER_BATTLE_PARAM.battleScriptRetAddrA = temp->params.battleScriptRetAddrA;
+    RemapRivalOpponentsForCurrentStarter();
 }
 
 void TrainerBattleLoadArgsTrainerB(const u8 *data)
@@ -994,6 +1006,7 @@ void TrainerBattleLoadArgsTrainerB(const u8 *data)
     TRAINER_BATTLE_PARAM.introTextB = temp->params.introTextB;
     TRAINER_BATTLE_PARAM.defeatTextB = temp->params.defeatTextB;
     TRAINER_BATTLE_PARAM.battleScriptRetAddrB = temp->params.battleScriptRetAddrB;
+    RemapRivalOpponentsForCurrentStarter();
 }
 
 // loads trainer A parameter to trainer B. Used for second trainer in trainer_see.c
@@ -1007,6 +1020,7 @@ void TrainerBattleLoadArgsSecondTrainer(const u8 *data)
     TRAINER_BATTLE_PARAM.introTextB = temp->params.introTextA;
     TRAINER_BATTLE_PARAM.defeatTextB = temp->params.defeatTextA;
     TRAINER_BATTLE_PARAM.battleScriptRetAddrB = temp->params.battleScriptRetAddrA;
+    RemapRivalOpponentsForCurrentStarter();
 }
 
 void SetMapVarsToTrainerA(void)
