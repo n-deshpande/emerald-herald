@@ -6,13 +6,16 @@
 #define RELIC_BULWARK 1
 #define RELIC_PRECISION 2
 #define RELIC_EXPOSED 3
-#define RELIC_COUNT 4
+#define RELIC_DRACONIC_ANCESTRY 4
+#define RELIC_COUNT 5
 
 // Effect types
 enum RelicEffectType
 {
     RELIC_EFF_DAMAGE_TAKEN_MULT,
     RELIC_EFF_ACCURACY_FLAT_BONUS,
+    RELIC_EFF_STARTER_POOL_FILTER,
+    RELIC_EFF_STARTER_SLOT_OVERRIDE,
 };
 
 // Stacking rules
@@ -20,6 +23,7 @@ enum RelicStacking
 {
     RELIC_STACK_MULTIPLY,
     RELIC_STACK_ADD_PCT,
+    RELIC_STACK_ADD_FLAT,
     RELIC_STACK_MAX,
     RELIC_STACK_MIN,
     RELIC_STACK_OVERRIDE,
@@ -49,6 +53,15 @@ enum RelicRarity
     RELIC_RARITY_COMMON,
     RELIC_RARITY_UNCOMMON,
     RELIC_RARITY_RARE,
+    RELIC_RARITY_COUNT,
+};
+
+// Acquisition flags
+enum RelicAcquisitionFlags
+{
+    RELIC_ACQF_IDENTITY_DRAFT = (1 << 0),
+    RELIC_ACQF_MILESTONE_DRAW = (1 << 1),
+    RELIC_ACQF_TRADE_UP_TARGET = (1 << 2),
 };
 
 // Tier constants

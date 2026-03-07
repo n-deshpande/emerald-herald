@@ -37,29 +37,17 @@ static const struct RelicBattleDamageTakenParams sRelicParams_Bulwark_T3 =
 
 static const struct RelicEffect sRelicEffects_Bulwark_T1[] =
 {
-    {
-        .type = RELIC_EFF_DAMAGE_TAKEN_MULT,
-        .stacking = RELIC_STACK_MULTIPLY,
-        .params = &sRelicParams_Bulwark_T1,
-    },
+    RELIC_EFFECT_DAMAGE_TAKEN(RELIC_STACK_MULTIPLY, &sRelicParams_Bulwark_T1),
 };
 
 static const struct RelicEffect sRelicEffects_Bulwark_T2[] =
 {
-    {
-        .type = RELIC_EFF_DAMAGE_TAKEN_MULT,
-        .stacking = RELIC_STACK_MULTIPLY,
-        .params = &sRelicParams_Bulwark_T2,
-    },
+    RELIC_EFFECT_DAMAGE_TAKEN(RELIC_STACK_MULTIPLY, &sRelicParams_Bulwark_T2),
 };
 
 static const struct RelicEffect sRelicEffects_Bulwark_T3[] =
 {
-    {
-        .type = RELIC_EFF_DAMAGE_TAKEN_MULT,
-        .stacking = RELIC_STACK_MULTIPLY,
-        .params = &sRelicParams_Bulwark_T3,
-    },
+    RELIC_EFFECT_DAMAGE_TAKEN(RELIC_STACK_MULTIPLY, &sRelicParams_Bulwark_T3),
 };
 
 // ── Precision (accuracy bonus) ──────────────────────────────────────
@@ -93,29 +81,17 @@ static const struct RelicBattleAccuracyFlatParams sRelicParams_Precision_T3 =
 
 static const struct RelicEffect sRelicEffects_Precision_T1[] =
 {
-    {
-        .type = RELIC_EFF_ACCURACY_FLAT_BONUS,
-        .stacking = RELIC_STACK_ADD_PCT,
-        .params = &sRelicParams_Precision_T1,
-    },
+    RELIC_EFFECT_ACCURACY_FLAT(RELIC_STACK_ADD_FLAT, &sRelicParams_Precision_T1),
 };
 
 static const struct RelicEffect sRelicEffects_Precision_T2[] =
 {
-    {
-        .type = RELIC_EFF_ACCURACY_FLAT_BONUS,
-        .stacking = RELIC_STACK_ADD_PCT,
-        .params = &sRelicParams_Precision_T2,
-    },
+    RELIC_EFFECT_ACCURACY_FLAT(RELIC_STACK_ADD_FLAT, &sRelicParams_Precision_T2),
 };
 
 static const struct RelicEffect sRelicEffects_Precision_T3[] =
 {
-    {
-        .type = RELIC_EFF_ACCURACY_FLAT_BONUS,
-        .stacking = RELIC_STACK_ADD_PCT,
-        .params = &sRelicParams_Precision_T3,
-    },
+    RELIC_EFFECT_ACCURACY_FLAT(RELIC_STACK_ADD_FLAT, &sRelicParams_Precision_T3),
 };
 
 // ── Exposed (super-effective damage increase) ───────────────────────
@@ -152,29 +128,61 @@ static const struct RelicBattleDamageTakenParams sRelicParams_Exposed_T3 =
 
 static const struct RelicEffect sRelicEffects_Exposed_T1[] =
 {
-    {
-        .type = RELIC_EFF_DAMAGE_TAKEN_MULT,
-        .stacking = RELIC_STACK_MULTIPLY,
-        .params = &sRelicParams_Exposed_T1,
-    },
+    RELIC_EFFECT_DAMAGE_TAKEN(RELIC_STACK_MULTIPLY, &sRelicParams_Exposed_T1),
 };
 
 static const struct RelicEffect sRelicEffects_Exposed_T2[] =
 {
-    {
-        .type = RELIC_EFF_DAMAGE_TAKEN_MULT,
-        .stacking = RELIC_STACK_MULTIPLY,
-        .params = &sRelicParams_Exposed_T2,
-    },
+    RELIC_EFFECT_DAMAGE_TAKEN(RELIC_STACK_MULTIPLY, &sRelicParams_Exposed_T2),
 };
 
 static const struct RelicEffect sRelicEffects_Exposed_T3[] =
 {
-    {
-        .type = RELIC_EFF_DAMAGE_TAKEN_MULT,
-        .stacking = RELIC_STACK_MULTIPLY,
-        .params = &sRelicParams_Exposed_T3,
-    },
+    RELIC_EFFECT_DAMAGE_TAKEN(RELIC_STACK_MULTIPLY, &sRelicParams_Exposed_T3),
+};
+
+// ── Draconic Ancestry (starter slot overrides) ─────────────────────
+
+static const struct RelicStarterSlotOverrideParams sRelicParams_DraconicAncestry_Slot0 =
+{
+    .slot = 0,
+    .speciesPrimary = SPECIES_DREEPY,
+    .speciesSecondary = SPECIES_GIBLE,
+};
+
+static const struct RelicStarterSlotOverrideParams sRelicParams_DraconicAncestry_Slot1 =
+{
+    .slot = 1,
+    .speciesPrimary = SPECIES_JANGMO_O,
+    .speciesSecondary = SPECIES_BAGON,
+};
+
+static const struct RelicStarterSlotOverrideParams sRelicParams_DraconicAncestry_Slot2 =
+{
+    .slot = 2,
+    .speciesPrimary = SPECIES_DRATINI,
+    .speciesSecondary = SPECIES_GOOMY,
+};
+
+static const struct RelicEffect sRelicEffects_DraconicAncestry_T1[] =
+{
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot0),
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot1),
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot2),
+};
+
+static const struct RelicEffect sRelicEffects_DraconicAncestry_T2[] =
+{
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot0),
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot1),
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot2),
+};
+
+static const struct RelicEffect sRelicEffects_DraconicAncestry_T3[] =
+{
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot0),
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot1),
+    RELIC_EFFECT_STARTER_SLOT_OVERRIDE(RELIC_STACK_OVERRIDE, &sRelicParams_DraconicAncestry_Slot2),
 };
 
 // ── Relic definitions table ─────────────────────────────────────────
@@ -188,6 +196,7 @@ static const struct RelicDef sRelicDefs[RELIC_COUNT] =
     {
         .name = COMPOUND_STRING("Bulwark"),
         .rarity = RELIC_RARITY_COMMON,
+        .acquisitionFlags = RELIC_ACQF_IDENTITY_DRAFT | RELIC_ACQF_MILESTONE_DRAW | RELIC_ACQF_TRADE_UP_TARGET,
         .descriptions = {
             COMPOUND_STRING("Your party takes\n15% less damage."),
             COMPOUND_STRING("Your party takes\n25% less damage."),
@@ -200,6 +209,7 @@ static const struct RelicDef sRelicDefs[RELIC_COUNT] =
     {
         .name = COMPOUND_STRING("Precision"),
         .rarity = RELIC_RARITY_COMMON,
+        .acquisitionFlags = RELIC_ACQF_IDENTITY_DRAFT | RELIC_ACQF_MILESTONE_DRAW | RELIC_ACQF_TRADE_UP_TARGET,
         .descriptions = {
             COMPOUND_STRING("Your moves gain\n+3 accuracy."),
             COMPOUND_STRING("Your moves gain\n+5 accuracy."),
@@ -212,6 +222,7 @@ static const struct RelicDef sRelicDefs[RELIC_COUNT] =
     {
         .name = COMPOUND_STRING("Exposed"),
         .rarity = RELIC_RARITY_COMMON,
+        .acquisitionFlags = RELIC_ACQF_IDENTITY_DRAFT | RELIC_ACQF_MILESTONE_DRAW | RELIC_ACQF_TRADE_UP_TARGET,
         .descriptions = {
             COMPOUND_STRING("Your party takes 20% more\n"
                             "damage from super-effective\n"
@@ -225,6 +236,22 @@ static const struct RelicDef sRelicDefs[RELIC_COUNT] =
         },
         .effects = { sRelicEffects_Exposed_T1, sRelicEffects_Exposed_T2, sRelicEffects_Exposed_T3 },
         .effectCount = { ARRAY_COUNT(sRelicEffects_Exposed_T1), ARRAY_COUNT(sRelicEffects_Exposed_T2), ARRAY_COUNT(sRelicEffects_Exposed_T3) },
+    },
+    [RELIC_DRACONIC_ANCESTRY] =
+    {
+        .name = COMPOUND_STRING("Draconic Ancestry"),
+        .rarity = RELIC_RARITY_UNCOMMON,
+        .acquisitionFlags = RELIC_ACQF_IDENTITY_DRAFT,
+        .descriptions = {
+            COMPOUND_STRING("Starter slots become\n"
+                            "dragon descendants."),
+            COMPOUND_STRING("Starter slots become\n"
+                            "dragon descendants."),
+            COMPOUND_STRING("Starter slots become\n"
+                            "dragon descendants."),
+        },
+        .effects = { sRelicEffects_DraconicAncestry_T1, sRelicEffects_DraconicAncestry_T2, sRelicEffects_DraconicAncestry_T3 },
+        .effectCount = { ARRAY_COUNT(sRelicEffects_DraconicAncestry_T1), ARRAY_COUNT(sRelicEffects_DraconicAncestry_T2), ARRAY_COUNT(sRelicEffects_DraconicAncestry_T3) },
     },
 };
 

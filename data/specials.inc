@@ -175,6 +175,8 @@ gSpecials::
 	def_special StartWallClock
 	def_special Special_ViewWallClock
 	def_special Special_InitRelics
+	def_special Special_LockStarterOffer
+	def_special Special_GetStarterSpeciesForSlot
 	def_special Special_OpenRelicMenu
 	def_special ChooseStarter
 	def_special StartWallyTutorialBattle

@@ -50,7 +50,7 @@
 #define VAR_RECYCLE_GOODS                                0x4020
 #define VAR_REPEL_STEP_COUNT                             0x4021
 #define VAR_ICE_STEP_COUNT                               0x4022
-#define VAR_STARTER_MON                                  0x4023 // 0=Treecko, 1=Torchic, 2=Mudkip
+#define VAR_STARTER_MON                                  0x4023 // Starter offer slot index (legacy scripts assume 0-2)
 #define VAR_MIRAGE_RND_H                                 0x4024
 #define VAR_MIRAGE_RND_L                                 0x4025
 #define VAR_SECRET_BASE_MAP                              0x4026
@@ -268,10 +268,10 @@
 #define VAR_UNUSED_0x40F8                                0x40F8 // Unused Var
 #define VAR_UNUSED_0x40F9                                0x40F9 // Unused Var
 #define VAR_UNUSED_0x40FA                                0x40FA // Unused Var
-#define VAR_UNUSED_0x40FB                                0x40FB // Unused Var
-#define VAR_UNUSED_0x40FC                                0x40FC // Unused Var
-#define VAR_UNUSED_0x40FD                                0x40FD // Unused Var
-#define VAR_UNUSED_0x40FE                                0x40FE // Unused Var
+#define VAR_STARTER_OFFER_LOCKED                         0x40FB // bool: starter offer species were persisted at initial pick
+#define VAR_STARTER_OFFER_SLOT_0_SPECIES                 0x40FC
+#define VAR_STARTER_OFFER_SLOT_1_SPECIES                 0x40FD
+#define VAR_STARTER_OFFER_SLOT_2_SPECIES                 0x40FE
 #define VAR_UNUSED_0x40FF                                0x40FF // Unused Var
 
 #define VARS_END                                         0x40FF
