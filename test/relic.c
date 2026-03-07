@@ -277,6 +277,47 @@ TEST("BuildAndLockStarterOfferIfNeeded freezes starter offer before selection")
     ResetStarterOfferLock();
 }
 
+TEST("BuildStarterOffer ignores invalid locked starter species from save vars")
+{
+    struct StarterOffer offer = {0};
+
+    ResetStarterOfferLock();
+    Relic_ClearAll();
+    VarSet(VAR_STARTER_OFFER_SLOT_0_SPECIES, NUM_SPECIES + 1);
+    VarSet(VAR_STARTER_OFFER_SLOT_1_SPECIES, SPECIES_TORCHIC);
+    VarSet(VAR_STARTER_OFFER_SLOT_2_SPECIES, SPECIES_MUDKIP);
+    VarSet(VAR_STARTER_OFFER_LOCKED, TRUE);
+
+    BuildStarterOffer(&offer);
+
+    EXPECT_EQ(offer.count, STARTER_OFFER_COUNT);
+    EXPECT_EQ(offer.species[0], SPECIES_TREECKO);
+    EXPECT_EQ(offer.species[1], SPECIES_TORCHIC);
+    EXPECT_EQ(offer.species[2], SPECIES_MUDKIP);
+    ResetStarterOfferLock();
+}
+
+TEST("LockStarterOffer normalizes duplicate and missing starter slots")
+{
+    struct StarterOffer inputOffer =
+    {
+        .species = { SPECIES_TREECKO, SPECIES_TREECKO, SPECIES_NONE },
+        .count = STARTER_OFFER_COUNT,
+    };
+    struct StarterOffer lockedOffer = {0};
+
+    ResetStarterOfferLock();
+    Relic_ClearAll();
+    LockStarterOffer(&inputOffer);
+    BuildStarterOffer(&lockedOffer);
+
+    EXPECT_EQ(lockedOffer.count, STARTER_OFFER_COUNT);
+    EXPECT_EQ(lockedOffer.species[0], SPECIES_TREECKO);
+    EXPECT_EQ(lockedOffer.species[1], SPECIES_TORCHIC);
+    EXPECT_EQ(lockedOffer.species[2], SPECIES_MUDKIP);
+    ResetStarterOfferLock();
+}
+
 TEST("GetStarterPokemonFromOffer clamps invalid selection index to slot zero")
 {
     struct StarterOffer offer =

@@ -377,9 +377,6 @@ static void NormalizeStarterOffer(struct StarterOffer *offer)
         }
     }
 
-    if (normalizedCount != STARTER_OFFER_COUNT)
-        AGB_ASSERT(FALSE);
-
     for (i = 0; i < STARTER_OFFER_COUNT && normalizedCount < STARTER_OFFER_COUNT; i++)
     {
         if (!StarterOfferContainsSpecies(normalized, normalizedCount, sStarterMon[i]))
@@ -406,6 +403,10 @@ static bool32 IsStarterOfferLocked(void)
     species0 = VarGet(VAR_STARTER_OFFER_SLOT_0_SPECIES);
     species1 = VarGet(VAR_STARTER_OFFER_SLOT_1_SPECIES);
     species2 = VarGet(VAR_STARTER_OFFER_SLOT_2_SPECIES);
+
+    species0 = SanitizeSpeciesId(species0);
+    species1 = SanitizeSpeciesId(species1);
+    species2 = SanitizeSpeciesId(species2);
 
     if (species0 == SPECIES_NONE || species1 == SPECIES_NONE || species2 == SPECIES_NONE)
         return FALSE;
